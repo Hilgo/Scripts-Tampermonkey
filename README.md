@@ -20,10 +20,12 @@ Disponível para:
 ---
 
 ## 📂 Estrutura do Repositório
-scripts-tampermonkey/
-  educacao-profissional/
-    melhorias_navegacao.user.js
-
+```
+Scripts Tampermonkey/
+|-- README.md
+|-- Educação Profissional/
+  |-- melhorias_navegacao.user.js
+```
 ---
 
 ## 🎯 Script: Melhorias de Navegação - Educação Profissional
