@@ -2,6 +2,7 @@
 
 Repositório com scripts personalizados para uso no Tampermonkey, focados em melhorar a usabilidade, navegação e produtividade em diferentes sistemas web.
 
+![Tampermonkey](https://img.shields.io/badge/Tampermonkey-Script-blue)
 ---
 
 ## 📦 Requisitos
@@ -10,7 +11,6 @@ Para utilizar os scripts, é necessário instalar o:
 
 - Tampermonkey (extensão de navegador)
 
-![Tampermonkey](https://img.shields.io/badge/Tampermonkey-Script-blue)
 
 Disponível para:
 - Chrome
@@ -22,7 +22,7 @@ Disponível para:
 ## 📂 Estrutura do Repositório
 scripts-tampermonkey/
   educacao-profissional/
-    melhorias_navegacao.js
+    melhorias_navegacao.user.js
 
 ---
 
@@ -48,7 +48,7 @@ Script voltado para o ambiente Moodle da Educação Profissional do estado de S�
 ### Método 1 (Recomendado)
 
 1. Acesse o arquivo no GitHub
-2. Clique em **Raw**
+2. Clique em **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Educa%C3%A7%C3%A3o%20Profissional/melhorias_navegacao.user.js)**
 3. O Tampermonkey abrirá automaticamente
 4. Clique em **Instalar**
 
@@ -58,7 +58,7 @@ Script voltado para o ambiente Moodle da Educação Profissional do estado de S�
 
 1. Abra o Tampermonkey
 2. Clique em **Criar novo script**
-3. Cole o conteúdo do arquivo `melhorias_navegacao.js`
+3. Cole o conteúdo do arquivo `melhorias_navegacao.user.js`
 4. Salve
 
 ---
