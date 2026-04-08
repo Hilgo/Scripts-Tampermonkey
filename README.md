@@ -10,6 +10,8 @@ Para utilizar os scripts, é necessário instalar o:
 
 - Tampermonkey (extensão de navegador)
 
+![Tampermonkey](https://img.shields.io/badge/Tampermonkey-Script-blue)
+
 Disponível para:
 - Chrome
 - Edge
@@ -19,8 +21,8 @@ Disponível para:
 
 ## 📂 Estrutura do Repositório
 scripts-tampermonkey/
-├── educacao-profissional/
-│ └── melhorias_navegacao.js
+  educacao-profissional/
+    melhorias_navegacao.js
 
 ---
 
