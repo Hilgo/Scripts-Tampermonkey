@@ -8,8 +8,8 @@
 // @icon         https://educacaoprofissional.educacao.sp.gov.br/pluginfile.php/1/theme_boost_union/favicon/64x64/1774361098/favicon.ico
 // @require http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js
 // @require  https://gist.github.com/raw/2625891/waitForKeyElements.js
-// @updateURL   https://raw.githubusercontent.com/Hilgo/Scripts-Tampermonkey/refs/heads/main/Educa%C3%A7%C3%A3o%20Profissional/melhorias_navegacao.js
-// @downloadURL https://raw.githubusercontent.com/Hilgo/Scripts-Tampermonkey/refs/heads/main/Educa%C3%A7%C3%A3o%20Profissional/melhorias_navegacao.js
+// @updateURL   https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Educa%C3%A7%C3%A3o%20Profissional/melhorias_navegacao.user.js
+// @downloadURL https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Educa%C3%A7%C3%A3o%20Profissional/melhorias_navegacao.user.js
 // @grant        none
 // ==/UserScript==
 
