@@ -24,9 +24,9 @@ Disponível para:
 Scripts Tampermonkey/
 |-- README.md
 |-- Educação Profissional/
-|-- melhorias_navegacao.user.js
+|---- melhorias_navegacao.user.js
 |-- Sala do Futuro/
-|-- lançar_notas_planilha.user.js
+|---- lançar_notas_planilha.user.js
 ```
 ---
 
@@ -75,7 +75,7 @@ Script para automação de lançamento de notas de estudantes no sistema "Sala d
 ### Método 1 (Recomendado)
 
 1. Acesse o arquivo no GitHub
-2. Clique em **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Sala%20do%20Futuro/lan%C3%A7ar_notas_planilha.user.js)** para o script Sala do Futuro
+2. Clique em **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Sala%20do%20Futuro/lan%C3%A7ar_notas_planilha.user.js)** para o script Sala do Futuro Ou clique em **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Educa%C3%A7%C3%A3o%20Profissional/melhorias_navegacao.user.js)** para o script da melhoria de navegação.
 3. O Tampermonkey abrirá automaticamente
 4. Clique em **Instalar**
 
