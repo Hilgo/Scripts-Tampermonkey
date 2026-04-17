@@ -120,15 +120,28 @@ function createAndAppendModal() {
     const modalContent = document.createElement('div');
     modalContent.classList.add('meu-modal-content');
 
-    // Adiciona o botão de fechar
+    // === HEADER (FIXO) ===
+    const modalHeader = document.createElement('div');
+    modalHeader.classList.add('meu-modal-header');
+
+    // Adiciona o título no header
+    const modalTitle = document.createElement('h2');
+    modalTitle.textContent = 'Lançamento de notas por planilha';
+    modalTitle.style.cssText = 'margin: 0; flex: 1;';
+
+    // Adiciona o botão de fechar no header
     const closeBtn = document.createElement('span');
     closeBtn.classList.add('meu-modal-close');
     closeBtn.innerHTML = '&times;'; // Caractere 'x'
     closeBtn.onclick = closeModal; // Define o evento de fechar
 
-    // Adiciona o título e o corpo do texto
-    const modalTitle = document.createElement('h2');
-    modalTitle.textContent = 'Lançamento de notas por planilha';
+    modalHeader.appendChild(modalTitle);
+    modalHeader.appendChild(closeBtn);
+
+    // === BODY (SCROLLÁVEL) ===
+    const modalBody = document.createElement('div');
+    modalBody.classList.add('meu-modal-body');
+
     const modalText = document.createElement('p');
     modalText.textContent = 'Importe notas ao colar de uma planilha (1ª Coluna nome do aluno, 2ª Coluna Nota)';
 
@@ -140,7 +153,7 @@ function createAndAppendModal() {
 
     myPasteTarget.id = 'myPasteTarget';
     myPasteTarget.contentEditable = 'true';
-    myPasteTarget.style.cssText = 'border: 1px solid black; min-height: 50px;';
+    myPasteTarget.style.cssText = 'border: 1px solid black; min-height: 50px; margin: 10px 0;';
     myPasteTarget.innerHTML = 'Cole a planilha aqui:';
     myPasteTarget.addEventListener('paste', async (event) => {
         event.preventDefault(); // Prevent default paste behavior
@@ -205,23 +218,30 @@ function createAndAppendModal() {
         }
     });
 
+    modalBody.appendChild(modalText);
+    modalBody.appendChild(myPasteTarget);
+    modalBody.appendChild(tableContainer);
+
+    // === FOOTER (FIXO) ===
+    const modalFooter = document.createElement('div');
+    modalFooter.classList.add('meu-modal-footer');
+
     //Criar botão para setar notas aos alunos
     const botaoSalvar = document.createElement("button");
     botaoSalvar.className = "btn btn-primary";
     botaoSalvar.title = "Ao clicar, os valores da tabela serão incluídos na tabela automaticamente, VALIDE OS VALORES ANTES DE SALVAR";
     botaoSalvar.textContent = "Aplicar Notas";
-    botaoSalvar.style = "padding: 5px; margin-bottom: 5px; width:50%;display: block;margin: 5px auto;";
+    botaoSalvar.style = "padding: 5px; width: 50%;";
     botaoSalvar.onclick = () => {
         AplicarNotas();
     };
 
-    // Monta a estrutura
-    modalContent.appendChild(closeBtn);
-    modalContent.appendChild(modalTitle);
-    modalContent.appendChild(modalText);
-    modalContent.appendChild(myPasteTarget);
-    modalContent.appendChild(tableContainer);
-    modalContent.appendChild(botaoSalvar);
+    modalFooter.appendChild(botaoSalvar);
+
+    // Monta a estrutura final
+    modalContent.appendChild(modalHeader);
+    modalContent.appendChild(modalBody);
+    modalContent.appendChild(modalFooter);
     modal.appendChild(modalContent);
 
     // Adiciona o modal ao corpo do documento
@@ -299,21 +319,44 @@ function inicializar(){
 
 .meu-modal-content {
     background-color: #fefefe;
-    padding: 20px;
     border: 1px solid #888;
-    width: 50%;
     border-radius: 5px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    width: 50%;
     max-height: 580px;
+    display: flex;
+    flex-direction: column;
+}
+
+.meu-modal-header {
+    padding: 20px 20px 0 20px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.meu-modal-body {
+    padding: 0 20px;
     overflow-y: auto;
+    flex: 1;
+}
+
+.meu-modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #ddd;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
 }
 
 .meu-modal-close {
     color: #aaa;
-    float: right;
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
+    margin: 0;
+    padding: 0;
 }
 
 .meu-modal-close:hover,
