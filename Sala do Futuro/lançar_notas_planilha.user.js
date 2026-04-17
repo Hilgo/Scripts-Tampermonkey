@@ -7,6 +7,8 @@
 // @icon         https://saladofuturoprofessor.educacao.sp.gov.br/favicon.ico
 // @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @match        https://saladofuturoprofessor.educacao.sp.gov.br/diario-classe__avalicao___lancamentoDetalhes
+// @updateURL   https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Sala%20do%20Futuro/lan%C3%A7ar_notas_planilha.user.js
+// @downloadURL https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Sala%20do%20Futuro/lan%C3%A7ar_notas_planilha.user.js
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==
