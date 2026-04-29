@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Educação Profissional – Melhorias de Navegação
 // @namespace    https://educacaoprofissional.educacao.sp.gov.br/userscripts
-// @version      2026-04-01
+// @version      2026-04-29
 // @description  Userscript para melhorar a navegação no Moodle da Educação Profissional. Destaca registros de aula, fixa o breadcrumb com transparência, corrige breadcrumbs de relatórios, adiciona um botão flutuante que coleta e permite copiar todos os links de registros da disciplina atual e cria um botão de atalho fixo para exportar relatórios de conclusões de atividades em CSV.
 // @author       Hilgo
 // @match        https://educacaoprofissional.educacao.sp.gov.br/*
@@ -220,7 +220,7 @@ function ajustarRegistros() {
 
         const texto = link.textContent.trim();
 
-        if (texto.includes("Registro da Aula")) {
+        if (texto.toLowerCase().includes("registro da aula")) {
 
             link.dataset.registro = "true";
 
@@ -470,6 +470,27 @@ function abrirModalRegistros(lista) {
     });
 
 
+    const abrir = document.createElement("button");
+
+    abrir.textContent = "🔗 Abrir em novas abas";
+
+    abrir.style.marginTop = "10px";
+    abrir.style.marginRight = "10px";
+    abrir.style.padding = "6px 10px";
+    abrir.style.cursor = "pointer";
+
+
+    abrir.addEventListener("click", () => {
+
+        lista.forEach(link => {
+
+            window.open(link, '_blank');
+
+        });
+
+    });
+
+
     const fechar = document.createElement("button");
 
     fechar.textContent = "Fechar";
@@ -486,6 +507,7 @@ function abrirModalRegistros(lista) {
     modal.appendChild(titulo);
     modal.appendChild(textarea);
     modal.appendChild(copiar);
+    modal.appendChild(abrir);
     modal.appendChild(fechar);
 
     overlay.appendChild(modal);
