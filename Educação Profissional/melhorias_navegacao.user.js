@@ -470,25 +470,6 @@ function abrirModalRegistros(lista) {
     });
 
 
-    const abrir = document.createElement("button");
-
-    abrir.textContent = "🔗 Abrir em novas abas";
-
-    abrir.style.marginTop = "10px";
-    abrir.style.marginRight = "10px";
-    abrir.style.padding = "6px 10px";
-    abrir.style.cursor = "pointer";
-
-
-    abrir.addEventListener("click", () => {
-
-        lista.forEach(link => {
-
-            window.open(link, '_blank');
-
-        });
-
-    });
 
 
     const fechar = document.createElement("button");
@@ -507,7 +488,6 @@ function abrirModalRegistros(lista) {
     modal.appendChild(titulo);
     modal.appendChild(textarea);
     modal.appendChild(copiar);
-    modal.appendChild(abrir);
     modal.appendChild(fechar);
 
     overlay.appendChild(modal);
