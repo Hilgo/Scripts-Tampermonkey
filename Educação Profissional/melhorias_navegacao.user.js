@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Educação Profissional – Melhorias de Navegação
 // @namespace    https://educacaoprofissional.educacao.sp.gov.br/userscripts
-// @version      1.1
+// @version      1.2
 // @description  Userscript para melhorar a navegação no Moodle da Educação Profissional. Destaca registros de aula, fixa o breadcrumb com transparência, corrige breadcrumbs de relatórios, adiciona um botão flutuante que coleta e permite copiar todos os links de registros da disciplina atual e cria um botão de atalho fixo para exportar relatórios de conclusões de atividades em CSV.
 // @author       Hilgo
 // @match        https://educacaoprofissional.educacao.sp.gov.br/*
@@ -220,7 +220,7 @@ function ajustarRegistros() {
 
         const texto = link.textContent.trim();
 
-        if (texto.toLowerCase().includes("registro da aula")) {
+        if (texto.toLowerCase().includes("registro da aula") || texto.toLowerCase().includes("registro de aula")) {
 
             link.dataset.registro = "true";
 
@@ -379,6 +379,49 @@ function criarBotaoExtrairRegistros() {
 
 
 /* --------------------------------------------------
+   BOTÃO RELATÓRIO DE CONCLUSÃO DE ATIVIDADES
+-------------------------------------------------- */
+
+function criarBotaoRelatorioConclusao() {
+
+    // Extrai o ID do curso da URL atual
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get('id');
+
+    // Se não encontrar o ID na URL, não cria o botão
+    if (!courseId) return;
+
+    const botao = document.createElement("button");
+
+    botao.textContent = "📊 Relatório de Conclusão de Atividades";
+
+    botao.style.position = "fixed";
+    botao.style.right = "20px";
+    botao.style.bottom = "7rem";
+    botao.style.zIndex = "9999";
+
+    botao.style.padding = "10px 14px";
+    botao.style.background = "#28a745";
+    botao.style.color = "white";
+    botao.style.border = "none";
+    botao.style.borderRadius = "6px";
+    botao.style.cursor = "pointer";
+    botao.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
+
+    botao.addEventListener("click", () => {
+
+        const linkRelatorio = "https://educacaoprofissional.educacao.sp.gov.br/report/progress/index.php?course=" + courseId;
+
+        window.open(linkRelatorio, "_blank");
+
+    });
+
+    document.body.appendChild(botao);
+
+}
+
+
+/* --------------------------------------------------
    MODAL COM LINKS DOS REGISTROS
 -------------------------------------------------- */
 
@@ -509,6 +552,8 @@ function abrirModalRegistros(lista) {
         fixarBreadcrumb();
 
         criarBotaoExtrairRegistros();
+
+        criarBotaoRelatorioConclusao();
 
         criarBotaoExportarCSV();
 
