@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Educação Profissional – Melhorias de Navegação
 // @namespace    https://educacaoprofissional.educacao.sp.gov.br/userscripts
-// @version      1.4
+// @version      1.5
 // @description  Userscript para melhorar a navegação no Moodle da Educação Profissional. Destaca registros de aula, fixa o breadcrumb com transparência, corrige breadcrumbs de relatórios, adiciona um botão flutuante que coleta e permite copiar todos os links de registros da disciplina atual e cria um botão de atalho fixo para exportar relatórios de conclusões de atividades em CSV.
 // @author       Hilgo
 // @match        https://educacaoprofissional.educacao.sp.gov.br/*
@@ -354,7 +354,7 @@ function criarBotaoExtrairRegistros() {
 
     botao.style.position = "fixed";
     botao.style.right = "20px";
-    botao.style.bottom = "11rem";
+    botao.style.bottom = "8rem";
     botao.style.zIndex = "9999";
 
     botao.style.padding = "10px 14px";
@@ -419,7 +419,7 @@ function criarBotaoRelatorioConclusao() {
 
     botao.style.position = "fixed";
     botao.style.right = "20px";
-    botao.style.bottom = "8rem";
+    botao.style.bottom = "11rem";
     botao.style.zIndex = "9999";
 
     botao.style.padding = "10px 14px";
