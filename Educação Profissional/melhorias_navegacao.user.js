@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Educação Profissional – Melhorias de Navegação
 // @namespace    https://educacaoprofissional.educacao.sp.gov.br/userscripts
-// @version      1.3
+// @version      1.4
 // @description  Userscript para melhorar a navegação no Moodle da Educação Profissional. Destaca registros de aula, fixa o breadcrumb com transparência, corrige breadcrumbs de relatórios, adiciona um botão flutuante que coleta e permite copiar todos os links de registros da disciplina atual e cria um botão de atalho fixo para exportar relatórios de conclusões de atividades em CSV.
 // @author       Hilgo
 // @match        https://educacaoprofissional.educacao.sp.gov.br/*
@@ -384,23 +384,29 @@ function criarBotaoExtrairRegistros() {
 
 function criarBotaoRelatorioConclusao() {
 
+    // Verifica se já está na página do relatório de conclusão
+    if (window.location.href.includes('/report/progress/')) {
+        return;
+    }
+
     // Extrai o ID do curso da URL atual
     const urlParams = new URLSearchParams(window.location.search);
     let courseId = urlParams.get('id');
 
     // Verifica se a URL é de um módulo específico onde o ID não é do curso
     const urlAtual = window.location.pathname.toLowerCase();
-    const modulosExclusos = ['/mod/url/view.php', '/mod/h5pactivity/view.php', '/mod/assign/view.php','/course/section.php','report/progress/index.php'];
+    const modulosExclusos = ['/mod/url/view.php', '/mod/h5pactivity/view.php', '/mod/assign/view.php','/course/section.php'];
     
     const ehModuloExcluido = modulosExclusos.some(modulo => urlAtual.includes(modulo));
 
-    // Se encontrou um courseId válido e não está em um módulo excluído, salva no sessionStorage
-    if (courseId && !ehModuloExcluido) {
+    // Se está em módulo excluído, ignora o ID da URL e tenta usar o sessionStorage
+    if (ehModuloExcluido) {
+        courseId = sessionStorage.getItem('lastValidCourseId');
+    } else if (courseId) {
+        // Se encontrou um courseId válido e não está em módulo excluído, salva no sessionStorage
         sessionStorage.setItem('lastValidCourseId', courseId);
-    }
-
-    // Se não encontrou courseId na URL, tenta usar o último salvo
-    if (!courseId) {
+    } else {
+        // Se não encontrou courseId na URL, tenta usar o último salvo
         courseId = sessionStorage.getItem('lastValidCourseId');
     }
 
