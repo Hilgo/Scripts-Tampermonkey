@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Educação Profissional – Melhorias de Navegação
 // @namespace    https://educacaoprofissional.educacao.sp.gov.br/userscripts
-// @version      1.2
+// @version      1.3
 // @description  Userscript para melhorar a navegação no Moodle da Educação Profissional. Destaca registros de aula, fixa o breadcrumb com transparência, corrige breadcrumbs de relatórios, adiciona um botão flutuante que coleta e permite copiar todos os links de registros da disciplina atual e cria um botão de atalho fixo para exportar relatórios de conclusões de atividades em CSV.
 // @author       Hilgo
 // @match        https://educacaoprofissional.educacao.sp.gov.br/*
@@ -354,7 +354,7 @@ function criarBotaoExtrairRegistros() {
 
     botao.style.position = "fixed";
     botao.style.right = "20px";
-    botao.style.bottom = "9rem";
+    botao.style.bottom = "11rem";
     botao.style.zIndex = "9999";
 
     botao.style.padding = "10px 14px";
@@ -386,9 +386,25 @@ function criarBotaoRelatorioConclusao() {
 
     // Extrai o ID do curso da URL atual
     const urlParams = new URLSearchParams(window.location.search);
-    const courseId = urlParams.get('id');
+    let courseId = urlParams.get('id');
 
-    // Se não encontrar o ID na URL, não cria o botão
+    // Verifica se a URL é de um módulo específico onde o ID não é do curso
+    const urlAtual = window.location.pathname.toLowerCase();
+    const modulosExclusos = ['/mod/url/view.php', '/mod/h5pactivity/view.php', '/mod/assign/view.php','/course/section.php','report/progress/index.php'];
+    
+    const ehModuloExcluido = modulosExclusos.some(modulo => urlAtual.includes(modulo));
+
+    // Se encontrou um courseId válido e não está em um módulo excluído, salva no sessionStorage
+    if (courseId && !ehModuloExcluido) {
+        sessionStorage.setItem('lastValidCourseId', courseId);
+    }
+
+    // Se não encontrou courseId na URL, tenta usar o último salvo
+    if (!courseId) {
+        courseId = sessionStorage.getItem('lastValidCourseId');
+    }
+
+    // Se não tem courseId, não cria o botão
     if (!courseId) return;
 
     const botao = document.createElement("button");
@@ -397,7 +413,7 @@ function criarBotaoRelatorioConclusao() {
 
     botao.style.position = "fixed";
     botao.style.right = "20px";
-    botao.style.bottom = "7rem";
+    botao.style.bottom = "8rem";
     botao.style.zIndex = "9999";
 
     botao.style.padding = "10px 14px";
