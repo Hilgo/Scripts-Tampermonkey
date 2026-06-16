@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Educação Profissional – Melhorias de Navegação
 // @namespace    https://educacaoprofissional.educacao.sp.gov.br/userscripts
-// @version      1.5
+// @version      1.6
 // @description  Userscript para melhorar a navegação no Moodle da Educação Profissional. Destaca registros de aula, fixa o breadcrumb com transparência, corrige breadcrumbs de relatórios, adiciona um botão flutuante que coleta e permite copiar todos os links de registros da disciplina atual e cria um botão de atalho fixo para exportar relatórios de conclusões de atividades em CSV.
 // @author       Hilgo
 // @match        https://educacaoprofissional.educacao.sp.gov.br/*
@@ -15,6 +15,52 @@
 
 (function () {
     'use strict';
+
+    let breadcrumbFixed = true;
+    let breadcrumbOriginalParent = null;
+    let breadcrumbOriginalNextSibling = null;
+    let breadcrumbContainer = null;
+
+    const SESSION_KEY_BREADCRUMB_FIXED = 'eduprof_breadcrumbFixed';
+    const SESSION_KEY_BOTOES_OCULTOS = 'eduprof_botoesRelatorioOcultos';
+
+    let botaoLinksRegistros = null;
+    let botaoRelatorioConclusao = null;
+    let botaoExportarCSV = null;
+    let botoesRelatorioOcultos = false;
+
+    function aplicarFadeEmBotao(botao) {
+        botao.style.opacity = "0.65";
+        botao.style.transition = "opacity 0.2s ease";
+
+        botao.addEventListener("mouseenter", () => {
+            botao.style.opacity = "1";
+        });
+
+        botao.addEventListener("mouseleave", () => {
+            botao.style.opacity = "0.65";
+        });
+    }
+
+    function carregarEstadoSession() {
+        const breadcrumbState = sessionStorage.getItem(SESSION_KEY_BREADCRUMB_FIXED);
+        if (breadcrumbState !== null) {
+            breadcrumbFixed = breadcrumbState === 'true';
+        }
+
+        const botoesState = sessionStorage.getItem(SESSION_KEY_BOTOES_OCULTOS);
+        if (botoesState !== null) {
+            botoesRelatorioOcultos = botoesState === 'true';
+        }
+    }
+
+    function salvarEstadoBreadcrumb() {
+        sessionStorage.setItem(SESSION_KEY_BREADCRUMB_FIXED, String(breadcrumbFixed));
+    }
+
+    function salvarEstadoBotoes() {
+        sessionStorage.setItem(SESSION_KEY_BOTOES_OCULTOS, String(botoesRelatorioOcultos));
+    }
 
     /* --------------------------------------------------
    FUNÇÃO PARA MOSTRAR NOTIFICAÇÕES DE REGISTROS A SEREM AVALIADOS
@@ -179,9 +225,13 @@
         botao.style.cursor = "pointer";
         botao.style.boxShadow = "0 3px 8px rgba(0,0,0,0.3)";
 
+        aplicarFadeEmBotao(botao);
+
         botao.onclick = () => {
             window.open(linkCSV, "_blank");
         };
+
+        botaoExportarCSV = botao;
 
         document.body.appendChild(botao);
 
@@ -272,34 +322,77 @@ function fixarBreadcrumb() {
     const breadcrumb = document.querySelector(".breadcrumb");
     if (!breadcrumb) return;
 
-    const container = document.createElement("div");
+    breadcrumbOriginalParent = breadcrumb.parentElement;
+    breadcrumbOriginalNextSibling = breadcrumb.nextElementSibling;
 
-    container.style.position = "fixed";
-    container.style.top = "70px";
-    container.style.left = "100px";
-    container.style.zIndex = "9999";
+    breadcrumbContainer = document.createElement("div");
 
-    container.style.background = "#fff";
-    container.style.padding = "6px 12px";
-    container.style.border = "1px solid #ddd";
-    container.style.borderRadius = "6px";
-    container.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
+    breadcrumbContainer.style.position = "fixed";
+    breadcrumbContainer.style.top = "70px";
+    breadcrumbContainer.style.left = "100px";
+    breadcrumbContainer.style.zIndex = "9999";
 
-    container.style.opacity = "0.6";
-    container.style.transition = "opacity 0.2s ease";
+    breadcrumbContainer.style.background = "#fff";
+    breadcrumbContainer.style.padding = "6px 12px";
+    breadcrumbContainer.style.border = "1px solid #ddd";
+    breadcrumbContainer.style.borderRadius = "6px";
+    breadcrumbContainer.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
 
-    container.addEventListener("mouseenter", () => {
-        container.style.opacity = "1";
+    breadcrumbContainer.style.opacity = "0.6";
+    breadcrumbContainer.style.transition = "opacity 0.2s ease";
+
+    breadcrumbContainer.addEventListener("mouseenter", () => {
+        breadcrumbContainer.style.opacity = "1";
     });
 
-    container.addEventListener("mouseleave", () => {
-        container.style.opacity = "0.6";
+    breadcrumbContainer.addEventListener("mouseleave", () => {
+        breadcrumbContainer.style.opacity = "0.6";
     });
 
-    container.appendChild(breadcrumb);
+    breadcrumbContainer.appendChild(breadcrumb);
 
-    document.body.appendChild(container);
+    document.body.appendChild(breadcrumbContainer);
 
+    breadcrumbFixed = true;
+
+}
+
+function alternarModoBreadcrumb() {
+
+    const breadcrumb = document.querySelector(".breadcrumb");
+    if (!breadcrumb) return;
+
+    if (breadcrumbFixed && breadcrumbContainer) {
+        breadcrumbOriginalParent.insertBefore(breadcrumb, breadcrumbOriginalNextSibling);
+        breadcrumbContainer.remove();
+        breadcrumbFixed = false;
+    } else {
+        if (!breadcrumbContainer) {
+            breadcrumbContainer = document.createElement("div");
+            breadcrumbContainer.style.position = "fixed";
+            breadcrumbContainer.style.top = "70px";
+            breadcrumbContainer.style.left = "100px";
+            breadcrumbContainer.style.zIndex = "9999";
+            breadcrumbContainer.style.background = "#fff";
+            breadcrumbContainer.style.padding = "6px 12px";
+            breadcrumbContainer.style.border = "1px solid #ddd";
+            breadcrumbContainer.style.borderRadius = "6px";
+            breadcrumbContainer.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
+            breadcrumbContainer.style.opacity = "0.6";
+            breadcrumbContainer.style.transition = "opacity 0.2s ease";
+            breadcrumbContainer.addEventListener("mouseenter", () => {
+                breadcrumbContainer.style.opacity = "1";
+            });
+            breadcrumbContainer.addEventListener("mouseleave", () => {
+                breadcrumbContainer.style.opacity = "0.6";
+            });
+        }
+        breadcrumbContainer.appendChild(breadcrumb);
+        document.body.appendChild(breadcrumbContainer);
+        breadcrumbFixed = true;
+    }
+
+    salvarEstadoBreadcrumb();
 }
 
 
@@ -365,6 +458,8 @@ function criarBotaoExtrairRegistros() {
     botao.style.cursor = "pointer";
     botao.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
 
+    aplicarFadeEmBotao(botao);
+
     botao.addEventListener("click", () => {
 
         const registros = obterLinksRegistros();
@@ -372,6 +467,8 @@ function criarBotaoExtrairRegistros() {
         abrirModalRegistros(registros);
 
     });
+
+    botaoLinksRegistros = botao;
 
     document.body.appendChild(botao);
 
@@ -430,6 +527,8 @@ function criarBotaoRelatorioConclusao() {
     botao.style.cursor = "pointer";
     botao.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
 
+    aplicarFadeEmBotao(botao);
+
     botao.addEventListener("click", () => {
 
         const linkRelatorio = "https://educacaoprofissional.educacao.sp.gov.br/report/progress/index.php?course=" + courseId;
@@ -438,10 +537,81 @@ function criarBotaoRelatorioConclusao() {
 
     });
 
+    botaoRelatorioConclusao = botao;
+
     document.body.appendChild(botao);
 
 }
 
+function criarBotoesFooter() {
+    const footerContainer = document.querySelector('[data-region="footer-container-popover"]');
+    if (!footerContainer) return;
+
+    const botoesContainer = document.createElement("div");
+    botoesContainer.id = "meus-footer-buttons";
+    botoesContainer.style.display = "flex";
+    botoesContainer.style.gap = "6px";
+    botoesContainer.style.alignItems = "center";
+    botoesContainer.style.marginLeft = "8px";
+
+    const botaoAlternarBreadcrumb = document.createElement("button");
+    botaoAlternarBreadcrumb.textContent = "🔁 Alterar estilo Breadcrumb";
+    botaoAlternarBreadcrumb.className = "btn";
+    botaoAlternarBreadcrumb.style.padding = "0 10px";
+    botaoAlternarBreadcrumb.style.background = "#2c7be5";
+    botaoAlternarBreadcrumb.style.color = "white";
+    botaoAlternarBreadcrumb.style.fontSize = "0.85rem";
+    botaoAlternarBreadcrumb.style.display = "inline-flex";
+    botaoAlternarBreadcrumb.style.alignItems = "center";
+    botaoAlternarBreadcrumb.style.justifyContent = "center";
+    botaoAlternarBreadcrumb.style.height = "32px";
+    botaoAlternarBreadcrumb.style.border = "none";
+    botaoAlternarBreadcrumb.style.borderRadius = "4px";
+    botaoAlternarBreadcrumb.addEventListener("click", alternarModoBreadcrumb);
+    aplicarFadeEmBotao(botaoAlternarBreadcrumb);
+
+    const botaoOcultarBotoes = document.createElement("button");
+    botaoOcultarBotoes.textContent = "🔘 Alterar visibilidade botões";
+    botaoOcultarBotoes.className = "btn";
+    botaoOcultarBotoes.style.padding = "0 10px";
+    botaoOcultarBotoes.style.background = "#6c757d";
+    botaoOcultarBotoes.style.color = "white";
+    botaoOcultarBotoes.style.fontSize = "0.85rem";
+    botaoOcultarBotoes.style.display = "inline-flex";
+    botaoOcultarBotoes.style.alignItems = "center";
+    botaoOcultarBotoes.style.justifyContent = "center";
+    botaoOcultarBotoes.style.height = "32px";
+    botaoOcultarBotoes.style.border = "none";
+    botaoOcultarBotoes.style.borderRadius = "4px";
+    botaoOcultarBotoes.addEventListener("click", alternarVisibilidadeBotoesRelatorio);
+    aplicarFadeEmBotao(botaoOcultarBotoes);
+
+    botoesContainer.appendChild(botaoAlternarBreadcrumb);
+    botoesContainer.appendChild(botaoOcultarBotoes);
+
+    const footerButtonsArea = footerContainer.querySelector('#boost-union-footer-buttons');
+    if (footerButtonsArea) {
+        footerButtonsArea.appendChild(botoesContainer);
+    } else {
+        footerContainer.appendChild(botoesContainer);
+    }
+}
+
+function alternarVisibilidadeBotoesRelatorio(forcarOcultar) {
+    if (typeof forcarOcultar === 'boolean') {
+        botoesRelatorioOcultos = forcarOcultar;
+    } else {
+        botoesRelatorioOcultos = !botoesRelatorioOcultos;
+    }
+
+    const action = botoesRelatorioOcultos ? 'none' : 'block';
+
+    if (botaoLinksRegistros) botaoLinksRegistros.style.display = action;
+    if (botaoRelatorioConclusao) botaoRelatorioConclusao.style.display = action;
+    if (botaoExportarCSV) botaoExportarCSV.style.display = action;
+
+    salvarEstadoBotoes();
+}
 
 /* --------------------------------------------------
    MODAL COM LINKS DOS REGISTROS
@@ -567,17 +737,29 @@ function abrirModalRegistros(lista) {
 -------------------------------------------------- */
 
     function executarAjustes(){
+        carregarEstadoSession();
+
         ajustarRegistros();
 
         corrigirBreadcrumbRelatorio();
 
         fixarBreadcrumb();
 
+        if (!breadcrumbFixed) {
+            alternarModoBreadcrumb();
+        }
+
         criarBotaoExtrairRegistros();
 
         criarBotaoRelatorioConclusao();
 
         criarBotaoExportarCSV();
+
+        criarBotoesFooter();
+
+        if (botoesRelatorioOcultos) {
+            alternarVisibilidadeBotoesRelatorio(true);
+        }
 
         verificarAvaliacoesPendentes();
     }
