@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sala do Futuro - Lançamento automático de avaliação na sala do futuro por tabela
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-05
+// @version      1.2
 // @description  Automação de lançamento de notas de estudantes por planilha. Cole a lista de alunos com as respectivas notas para que o script atualize a tabela das notas da sala do futuro automaticamente. VERIFIQUE OS VALORES
 // @author       Lucas Palma Stabile - github.com/Hilgo
 // @icon         https://saladofuturoprofessor.educacao.sp.gov.br/favicon.ico
@@ -12,6 +12,29 @@
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==
+
+/**
+ * Remove acentos e normaliza a string para comparação
+ * @param {string} str - Texto de entrada
+ * @returns {string} Texto sem acentos e em minúsculas
+ */
+function removerAcentos(str) {
+    if (typeof str !== 'string') return '';
+    return str
+        .normalize("NFD") // Decompõe caracteres e acentos
+        .replace(/[\u0300-\u036f]/g, "") // Remove marcas diacríticas
+        .toLowerCase(); // Ignora maiúsculas/minúsculas
+}
+
+/**
+ * Compara duas strings ignorando acentos e case
+ * @param {string} a 
+ * @param {string} b 
+ * @returns {boolean} true se forem iguais ignorando acentos
+ */
+function compararIgnorandoAcentos(a, b) {
+    return removerAcentos(a) === removerAcentos(b);
+} 
 
 /**
  * Encontra célula por valor do nome do estudante e retorna o input da nota do respectivo estudante.
@@ -41,9 +64,8 @@ function encontrarInputNotaEstudante(searchText) {
             // Obter o conteúdo de texto da célula (usar .textContent é melhor)
             const cellText = cell.textContent || cell.innerText;
 
-            // 5. Comparar o texto da célula com o texto de pesquisa
-            // Usar .trim() para remover espaços em branco e .toUpperCase() para comparação sem distinção de maiúsculas/minúsculas
-            if (cellText.trim().toUpperCase() === searchText.toUpperCase()) {
+            // 5. Comparar o texto da célula com o texto de pesquisa, ignorando acentos e case
+            if (compararIgnorandoAcentos(cellText.trim(),searchText)) {
                 // *** AJUSTE FEITO AQUI ***
                 // Em vez de retornar a célula, encontramos o input dentro da linha (parentNode)
                 const targetInput = cell.parentNode.querySelector("[name='n.NotaAtribuida']");
