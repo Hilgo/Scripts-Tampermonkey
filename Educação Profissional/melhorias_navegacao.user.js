@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Educação Profissional – Melhorias de Navegação
 // @namespace    https://educacaoprofissional.educacao.sp.gov.br/userscripts
-// @version      1.6
+// @version      1.7
 // @description  Userscript para melhorar a navegação no Moodle da Educação Profissional. Destaca registros de aula, fixa o breadcrumb com transparência, corrige breadcrumbs de relatórios, adiciona um botão flutuante que coleta e permite copiar todos os links de registros da disciplina atual e cria um botão de atalho fixo para exportar relatórios de conclusões de atividades em CSV.
 // @author       Hilgo
 // @match        https://educacaoprofissional.educacao.sp.gov.br/*
@@ -328,8 +328,8 @@ function fixarBreadcrumb() {
     breadcrumbContainer = document.createElement("div");
 
     breadcrumbContainer.style.position = "fixed";
-    breadcrumbContainer.style.top = "70px";
-    breadcrumbContainer.style.left = "100px";
+    breadcrumbContainer.style.top = "63px";
+    breadcrumbContainer.style.left = "302px";
     breadcrumbContainer.style.zIndex = "9999";
 
     breadcrumbContainer.style.background = "#fff";
@@ -546,6 +546,16 @@ function criarBotaoRelatorioConclusao() {
 function criarBotoesFooter() {
     const footerContainer = document.querySelector('[data-region="footer-container-popover"]');
     if (!footerContainer) return;
+    
+    // Adiciona a regra CSS para ajustar o bottom do elemento com id "boost-union-footer-buttons"
+    const style = document.createElement("style");
+    style.textContent = `
+        div#boost-union-footer-buttons {
+            bottom: 2rem !important;
+        }
+    `;
+
+    document.head.appendChild(style);
 
     const botoesContainer = document.createElement("div");
     botoesContainer.id = "meus-footer-buttons";
@@ -553,9 +563,11 @@ function criarBotoesFooter() {
     botoesContainer.style.gap = "6px";
     botoesContainer.style.alignItems = "center";
     botoesContainer.style.marginLeft = "8px";
+    botoesContainer.style.marginRight = "50px";
 
     const botaoAlternarBreadcrumb = document.createElement("button");
-    botaoAlternarBreadcrumb.textContent = "🔁 Alterar estilo Breadcrumb";
+    botaoAlternarBreadcrumb.textContent = "🔁"; 
+    botaoAlternarBreadcrumb.title = "Alterar estilo do Breadcrumb";
     botaoAlternarBreadcrumb.className = "btn";
     botaoAlternarBreadcrumb.style.padding = "0 10px";
     botaoAlternarBreadcrumb.style.background = "#2c7be5";
@@ -571,7 +583,8 @@ function criarBotoesFooter() {
     aplicarFadeEmBotao(botaoAlternarBreadcrumb);
 
     const botaoOcultarBotoes = document.createElement("button");
-    botaoOcultarBotoes.textContent = "🔘 Alterar visibilidade botões";
+    botaoOcultarBotoes.textContent = "🔘";
+    botaoOcultarBotoes.title = "Alterar visibilidade dos botões";
     botaoOcultarBotoes.className = "btn";
     botaoOcultarBotoes.style.padding = "0 10px";
     botaoOcultarBotoes.style.background = "#6c757d";
@@ -595,6 +608,18 @@ function criarBotoesFooter() {
     } else {
         footerContainer.appendChild(botoesContainer);
     }
+
+    // Seleciona o botão existente na tela
+    const botaoVoltarAoTopo = document.querySelector('#back-to-top');
+
+    if (botaoVoltarAoTopo) {
+        // Move o botão para dentro do div "meus-footer-buttons" como o primeiro elemento
+        const botoesContainer = document.querySelector('#meus-footer-buttons');
+        if (botoesContainer) {
+            botoesContainer.prepend(botaoVoltarAoTopo); // Adiciona como o primeiro elemento
+        }
+    }
+
 }
 
 function alternarVisibilidadeBotoesRelatorio(forcarOcultar) {
