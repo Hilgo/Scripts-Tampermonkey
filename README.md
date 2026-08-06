@@ -45,6 +45,21 @@ Script voltado para o ambiente Moodle da Educação Profissional do estado de S�
 - ⚠️ Notificação de **atividades que precisam ser avaliadas** na página do registro
 - 🚀 Acesso rápido ao botão **"Avaliar"**
 
+### 📄 Nome padrão do arquivo CSV exportado
+
+Ao exportar o relatório, o script gera um nome no formato:
+
+- turma_disciplina_bimestre.csv
+
+Exemplo:
+
+- 2DS_LogicaELinguagemdeProgramacao_3BI.csv
+
+Regras aplicadas:
+- turma em maiúsculas
+- disciplina sem espaços, acentos ou caracteres especiais
+- bimestre no formato 1BI, 2BI, 3BI ou 4BI
+
 ---
 
 ## 🎯 Script: Lançamento de Notas por Planilha - Sala do Futuro

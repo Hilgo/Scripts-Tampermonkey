@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Educação Profissional – Melhorias de Navegação
 // @namespace    https://educacaoprofissional.educacao.sp.gov.br/userscripts
-// @version      1.7
+// @version      1.8
 // @description  Userscript para melhorar a navegação no Moodle da Educação Profissional. Destaca registros de aula, fixa o breadcrumb com transparência, corrige breadcrumbs de relatórios, adiciona um botão flutuante que coleta e permite copiar todos os links de registros da disciplina atual e cria um botão de atalho fixo para exportar relatórios de conclusões de atividades em CSV.
 // @author       Hilgo
 // @match        https://educacaoprofissional.educacao.sp.gov.br/*
@@ -196,6 +196,103 @@
 
     }
 
+function removerAcentos(texto) {
+    return (texto || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+}
+
+function formatarTurmaParaArquivo(texto) {
+    return removerAcentos(texto || "")
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .toUpperCase();
+}
+
+function formatarDisciplinaParaArquivo(texto) {
+    return removerAcentos(texto || "")
+        .replace(/[^a-zA-Z0-9\s]/g, "")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .join("");
+}
+
+function formatarBimestreParaArquivo(texto) {
+    const valor = removerAcentos(texto || "")
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .toUpperCase();
+
+    const match = valor.match(/([1-4])/);
+    if (match) {
+        return `${match[1]}BI`;
+    }
+
+    return "BIMESTRE";
+}
+
+function obterBimestreDaPagina() {
+    const header = document.querySelector("#page-header")?.textContent || "";
+    const match = header.match(/(?:\b|[^\d])(1|2|3|4)(?:º|°|\s)?\s*(?:bimestre|bi)/i);
+
+    if (match) {
+        return `${match[1]}BI`.toUpperCase();
+    }
+
+    return null;
+}
+
+function gerarNomeArquivoCSV() {
+    const disciplina = obterDisciplina();
+    const tituloPagina = document.querySelector(".page-header-headings h1")?.textContent?.trim() || "relatorio";
+    const nomeDisciplina = disciplina?.nome || tituloPagina || "relatorio";
+
+    const turma = window.prompt("Digite a turma (ex.: 2DS):", "")?.trim() || "turma";
+    let bimestre = obterBimestreDaPagina();
+
+    if (!bimestre) {
+        bimestre = window.prompt("Digite o bimestre (ex.: 3BI):", "")?.trim() || "bimestre";
+    }
+
+    const turmaLimpa = formatarTurmaParaArquivo(turma);
+    const disciplinaLimpa = formatarDisciplinaParaArquivo(nomeDisciplina)
+        .replace(/bimestre$/i, "")
+        .replace(/\s+/g, "")
+        .replace(/\d+$/i, "");
+    const bimestreLimpo = formatarBimestreParaArquivo(bimestre);
+
+    return `${turmaLimpa || "TURMA"}_${disciplinaLimpa || "Disciplina"}_${bimestreLimpo || "BIMESTRE"}.csv`;
+}
+
+async function baixarArquivoComNome(url, nomeArquivo) {
+    try {
+        const resposta = await fetch(url, { credentials: 'same-origin' });
+        if (!resposta.ok) throw new Error(`Falha ao baixar o arquivo: ${resposta.status}`);
+
+        const blob = await resposta.blob();
+        const objetoUrl = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = objetoUrl;
+        link.download = nomeArquivo;
+        link.style.display = "none";
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(() => URL.revokeObjectURL(objetoUrl), 2000);
+    } catch (erro) {
+        const link = document.createElement("a");
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.download = nomeArquivo;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    }
+}
+
 /* --------------------------------------------------
    CRIAR UM BOTÃO DE ATALHO PARA CLICAR RAPIDAMENTE NA EXPORTAÇÃO DO RELATÓRIO PARA CSV
 -------------------------------------------------- */
@@ -228,7 +325,7 @@
         aplicarFadeEmBotao(botao);
 
         botao.onclick = () => {
-            window.open(linkCSV, "_blank");
+            baixarArquivoComNome(linkCSV, gerarNomeArquivoCSV());
         };
 
         botaoExportarCSV = botao;
