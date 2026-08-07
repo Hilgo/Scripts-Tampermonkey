@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Educação Profissional – Melhorias de Navegação
 // @namespace    https://educacaoprofissional.educacao.sp.gov.br/userscripts
-// @version      1.8
+// @version      1.9
 // @description  Userscript para melhorar a navegação no Moodle da Educação Profissional. Destaca registros de aula, fixa o breadcrumb com transparência, corrige breadcrumbs de relatórios, adiciona um botão flutuante que coleta e permite copiar todos os links de registros da disciplina atual e cria um botão de atalho fixo para exportar relatórios de conclusões de atividades em CSV.
 // @author       Hilgo
 // @match        https://educacaoprofissional.educacao.sp.gov.br/*
@@ -25,6 +25,7 @@
     const SESSION_KEY_BOTOES_OCULTOS = 'eduprof_botoesRelatorioOcultos';
 
     let botaoLinksRegistros = null;
+    let botaoLinksRelatorios = null;
     let botaoRelatorioConclusao = null;
     let botaoExportarCSV = null;
     let botoesRelatorioOcultos = false;
@@ -196,6 +197,40 @@
 
     }
 
+function criarLinksRelatorioCards() {
+    if (!window.location.pathname.endsWith('/my/courses.php')) return;
+    const cards = document.querySelectorAll('.card.course-card');
+    
+    if (!cards.length) return;
+
+    cards.forEach(card => {
+        const courseLink = card.querySelector('a.aalink.coursename');
+        if (!courseLink || courseLink.dataset.relatorioLinkAdded) return;
+
+        const textoCard = courseLink.textContent || '';
+        const textoNormalizado = textoCard.trim();
+        if (/Árvore de Materiais|Minha Biblioteca/i.test(textoNormalizado)) return;
+
+        const href = courseLink.href || '';
+        const match = href.match(/[?&]id=(\d+)/);
+        if (!match) return;
+
+        const courseId = match[1];
+        const relatorioUrl = `https://educacaoprofissional.educacao.sp.gov.br/report/progress/index.php?course=${courseId}`;
+
+        const relatorioLink = document.createElement('a');
+        relatorioLink.href = relatorioUrl;
+        relatorioLink.textContent = '📊 Relatório de Atividade';
+        relatorioLink.className = 'aalink ms-2';
+        relatorioLink.title = 'Relatório de atividade desta disciplina e bimestre';
+
+        courseLink.insertAdjacentElement('afterend', relatorioLink);
+        courseLink.dataset.relatorioLinkAdded = 'true';
+    });
+
+    criarBotaoExtrairRelatorios();
+}
+
 function removerAcentos(texto) {
     return (texto || "")
         .normalize("NFD")
@@ -217,6 +252,17 @@ function formatarDisciplinaParaArquivo(texto) {
         .join("");
 }
 
+function formatarDisciplinaParaChave(texto) {
+    return removerAcentos(texto || "")
+        .replace(/[^a-zA-Z0-9\s]/g, "")
+        .replace(/\b\d+\s*(?:BI|BIMESTRE)\b/gi, "")
+        .replace(/\d+$/g, "")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .join("");
+}
+
 function formatarBimestreParaArquivo(texto) {
     const valor = removerAcentos(texto || "")
         .replace(/[^a-zA-Z0-9]/g, "")
@@ -228,6 +274,43 @@ function formatarBimestreParaArquivo(texto) {
     }
 
     return "BIMESTRE";
+}
+
+function obterSugestaoTurmaDaPagina() {
+    const grupo = document.querySelector(".groupselector");
+    if (!grupo) return null;
+
+    const select = grupo.querySelector("select");
+    const texto = select?.selectedOptions?.[0]?.textContent || grupo.textContent || "";
+    const valor = removerAcentos(texto).toUpperCase();
+
+    const match = valor.match(/\b([1-4])(?:ª|º)?\s*SERIE\b/);
+    if (match) {
+        return match[1];
+    }
+
+    return null;
+}
+
+function obterGrupoTurmaDaPagina() {
+    const grupo = document.querySelector(".groupselector");
+    if (!grupo) return null;
+
+    const select = grupo.querySelector("select");
+    const texto = select?.selectedOptions?.[0]?.textContent || grupo.textContent || "";
+    return texto.trim() || null;
+}
+
+function salvarTurmaPadrao(turma, grupoTurma) {
+    if (!turma || !grupoTurma) return;
+    const chaveGrupo = `eduprof_turmaPadrao_${formatarTurmaParaArquivo(grupoTurma)}`;
+    localStorage.setItem(chaveGrupo, turma);
+}
+
+function carregarTurmaPadrao(grupoTurma) {
+    if (!grupoTurma) return null;
+    const chaveGrupo = `eduprof_turmaPadrao_${formatarTurmaParaArquivo(grupoTurma)}`;
+    return localStorage.getItem(chaveGrupo);
 }
 
 function obterBimestreDaPagina() {
@@ -246,7 +329,20 @@ function gerarNomeArquivoCSV() {
     const tituloPagina = document.querySelector(".page-header-headings h1")?.textContent?.trim() || "relatorio";
     const nomeDisciplina = disciplina?.nome || tituloPagina || "relatorio";
 
-    const turma = window.prompt("Digite a turma (ex.: 2DS):", "")?.trim() || "turma";
+    const grupoTurma = obterGrupoTurmaDaPagina();
+    const turmaPadraoSalva = carregarTurmaPadrao(grupoTurma);
+    const sugestaoTurma = obterSugestaoTurmaDaPagina();
+    const valorInicialTurma = turmaPadraoSalva || (sugestaoTurma ? sugestaoTurma : "");
+
+    const turma = window.prompt(
+        `Digite a turma (ex.: 2DS)${valorInicialTurma ? ` [sugestão: ${valorInicialTurma}]` : ""}`,
+        valorInicialTurma
+    )?.trim() || "turma";
+
+    if (turma && turma !== turmaPadraoSalva) {
+        salvarTurmaPadrao(turma, grupoTurma);
+    }
+
     let bimestre = obterBimestreDaPagina();
 
     if (!bimestre) {
@@ -409,6 +505,29 @@ function obterLinksRegistros() {
     return lista;
 }
 
+function obterLinksRelatoriosCurso() {
+    const cards = document.querySelectorAll('.card.course-card');
+    const lista = [];
+
+    cards.forEach(card => {
+        const courseLink = card.querySelector('a.aalink.coursename');
+        if (!courseLink) return;
+
+        const textoCard = courseLink.textContent || '';
+        if (/Árvore de Materiais|Minha Biblioteca/i.test(textoCard.trim())) return;
+
+        const href = courseLink.href || '';
+        const match = href.match(/[?&]id=(\d+)/);
+        if (!match) return;
+
+        const courseId = match[1];
+        const relatorioUrl = `https://educacaoprofissional.educacao.sp.gov.br/report/progress/index.php?course=${courseId}`;
+        lista.push(relatorioUrl);
+    });
+
+    return lista;
+}
+
 
 /* --------------------------------------------------
    BREADCRUMB FIXO
@@ -561,7 +680,7 @@ function criarBotaoExtrairRegistros() {
 
         const registros = obterLinksRegistros();
 
-        abrirModalRegistros(registros);
+        abrirModalRegistros(registros, 'Links dos Registros');
 
     });
 
@@ -569,6 +688,41 @@ function criarBotaoExtrairRegistros() {
 
     document.body.appendChild(botao);
 
+}
+
+function criarBotaoExtrairRelatorios() {
+    if (!window.location.pathname.endsWith('/my/courses.php')) return;
+    if (botaoLinksRelatorios) return;
+
+    const links = obterLinksRelatoriosCurso();
+    if (!links.length) return;
+
+    const botao = document.createElement("button");
+
+    botao.textContent = "📄 Links dos Relatórios";
+
+    botao.style.position = "fixed";
+    botao.style.right = "20px";
+    botao.style.bottom = "6rem";
+    botao.style.zIndex = "9999";
+
+    botao.style.padding = "10px 14px";
+    botao.style.background = "#17a2b8";
+    botao.style.color = "white";
+    botao.style.border = "none";
+    botao.style.borderRadius = "6px";
+    botao.style.cursor = "pointer";
+    botao.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
+
+    aplicarFadeEmBotao(botao);
+
+    botao.addEventListener("click", () => {
+        abrirModalRegistros(links, 'Links dos Relatórios');
+    });
+
+    botaoLinksRelatorios = botao;
+
+    document.body.appendChild(botao);
 }
 
 
@@ -607,32 +761,32 @@ function criarBotaoRelatorioConclusao() {
     // Se não tem courseId, não cria o botão
     if (!courseId) return;
 
-    const botao = document.createElement("button");
+    const linkRelatorio = "https://educacaoprofissional.educacao.sp.gov.br/report/progress/index.php?course=" + courseId;
 
+    const botao = document.createElement("a");
+
+    botao.href = linkRelatorio;
     botao.textContent = "📊 Relatório de Conclusão de Atividades";
+    botao.target = "_self";
 
     botao.style.position = "fixed";
     botao.style.right = "20px";
     botao.style.bottom = "11rem";
     botao.style.zIndex = "9999";
 
+    botao.style.display = "inline-flex";
+    botao.style.alignItems = "center";
+    botao.style.justifyContent = "center";
     botao.style.padding = "10px 14px";
     botao.style.background = "#28a745";
     botao.style.color = "white";
+    botao.style.textDecoration = "none";
     botao.style.border = "none";
     botao.style.borderRadius = "6px";
     botao.style.cursor = "pointer";
     botao.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
 
     aplicarFadeEmBotao(botao);
-
-    botao.addEventListener("click", () => {
-
-        const linkRelatorio = "https://educacaoprofissional.educacao.sp.gov.br/report/progress/index.php?course=" + courseId;
-
-        window.open(linkRelatorio, "_blank");
-
-    });
 
     botaoRelatorioConclusao = botao;
 
@@ -739,7 +893,7 @@ function alternarVisibilidadeBotoesRelatorio(forcarOcultar) {
    MODAL COM LINKS DOS REGISTROS
 -------------------------------------------------- */
 
-function abrirModalRegistros(lista) {
+function abrirModalRegistros(lista, tituloModal = "Links dos Registros") {
 
     const disciplina = obterDisciplina();
     const overlay = document.createElement("div");
@@ -756,6 +910,9 @@ function abrirModalRegistros(lista) {
     overlay.style.alignItems = "center";
     overlay.style.justifyContent = "center";
 
+    overlay.addEventListener("click", () => {
+        overlay.remove();
+    });
 
     const modal = document.createElement("div");
 
@@ -767,9 +924,12 @@ function abrirModalRegistros(lista) {
 
     modal.style.boxShadow = "0 4px 10px rgba(0,0,0,0.3)";
 
+    modal.addEventListener("click", (event) => {
+        event.stopPropagation();
+    });
 
     const titulo = document.createElement("h3");
-    titulo.textContent = "Links dos Registros";
+    titulo.textContent = tituloModal;
 
     if (disciplina) {
 
@@ -851,6 +1011,18 @@ function abrirModalRegistros(lista) {
 
     document.body.appendChild(overlay);
 
+    const fecharModal = () => {
+        overlay.remove();
+        document.removeEventListener('keydown', handleEsc);
+    };
+
+    const handleEsc = (event) => {
+        if (event.key === 'Escape' || event.key === 'Esc') {
+            fecharModal();
+        }
+    };
+
+    document.addEventListener('keydown', handleEsc);
 }
 
 
@@ -885,6 +1057,7 @@ function abrirModalRegistros(lista) {
 
         verificarAvaliacoesPendentes();
     }
-
+    
     waitForKeyElements('#course-index', executarAjustes);
+    waitForKeyElements('.card.course-card', criarLinksRelatorioCards);
 })();
