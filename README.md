@@ -41,9 +41,9 @@ Script voltado para o ambiente Moodle da Educação Profissional do estado de S�
 - 🧭 Correção de breadcrumb (caminho dos links do site) em páginas de relatório
 - 📋 Botão para listar todos os links de registros da disciplina
 - 📋 Copiar automaticamente os links dos registros
-- � Botão de links dos relatórios na página de cursos com coleta de URLs por disciplina
+- 📊 Botão de links dos relatórios na página de cursos com coleta de URLs por disciplina
 - 📊 Links diretos de relatório de atividade adicionados aos cards de curso
-- �📥 Botão flutuante para exportação rápida de relatório de conclusão de atividades (CSV)
+- 🔲 Botão flutuante para exportação rápida de relatório de conclusão de atividades (CSV)
 - ⚠️ Notificação de **atividades que precisam ser avaliadas** na página do registro
 - 🚀 Acesso rápido ao botão **"Avaliar"**
 
