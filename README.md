@@ -42,7 +42,7 @@ Script voltado para o ambiente Moodle da Educação Profissional do estado de S�
 - 📋 Botão para listar todos os links de registros da disciplina
 - 📋 Copiar automaticamente os links dos registros
 - 📊 Botão de links dos relatórios na página de cursos com coleta de URLs por disciplina
-- 📊 Links diretos de relatório de atividade adicionados aos cards de curso
+- 📊 Links diretos de relatório de atividade adicionados aos cards de curso, organizados por disciplinas e bimestres
 - 🔲 Botão flutuante para exportação rápida de relatório de conclusão de atividades (CSV)
 - ⚠️ Notificação de **atividades que precisam ser avaliadas** na página do registro
 - 🚀 Acesso rápido ao botão **"Avaliar"**

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Educação Profissional – Melhorias de Navegação
 // @namespace    https://educacaoprofissional.educacao.sp.gov.br/userscripts
-// @version      1.9
+// @version      2.0
 // @description  Userscript para melhorar a navegação no Moodle da Educação Profissional. Destaca registros de aula, fixa o breadcrumb com transparência, corrige breadcrumbs de relatórios, adiciona um botão flutuante que coleta e permite copiar todos os links de registros da disciplina atual e cria um botão de atalho fixo para exportar relatórios de conclusões de atividades em CSV.
 // @author       Hilgo
 // @match        https://educacaoprofissional.educacao.sp.gov.br/*
@@ -203,12 +203,36 @@ function criarLinksRelatorioCards() {
     
     if (!cards.length) return;
 
+    function extrairNomeDoCard(card) {
+        // tenta aria-label do link
+        const link = card.querySelector('a.aalink.coursename');
+        if (link) {
+            const aria = link.getAttribute('aria-label');
+            if (aria) return limparNomeDisciplinaParaExibir(aria);
+        }
+
+        // tenta elementos .multiline .sr-only dentro do card-body
+        const sr = card.querySelector('.card-body .multiline .sr-only') || card.querySelector('.card-body .sr-only') || card.querySelector('.sr-only');
+        if (sr && sr.textContent) return limparNomeDisciplinaParaExibir(sr.textContent.trim());
+
+        // tenta extrair do próprio título/link, mas evitando textContent bruto
+        if (link) {
+            // procurar spans visíveis que contenham o título
+            const visible = link.querySelector('span')?.textContent || link.textContent;
+            if (visible) return limparNomeDisciplinaParaExibir(visible.trim());
+        }
+
+        // fallback: todo card text
+        const cardText = card.textContent || '';
+        return limparNomeDisciplinaParaExibir(cardText.trim());
+    }
+
     cards.forEach(card => {
         const courseLink = card.querySelector('a.aalink.coursename');
         if (!courseLink || courseLink.dataset.relatorioLinkAdded) return;
 
-        const textoCard = courseLink.textContent || '';
-        const textoNormalizado = textoCard.trim();
+        const nomeExtraido = extrairNomeDoCard(card) || '';
+        const textoNormalizado = nomeExtraido.trim();
         if (/Árvore de Materiais|Minha Biblioteca/i.test(textoNormalizado)) return;
 
         const href = courseLink.href || '';
@@ -222,7 +246,7 @@ function criarLinksRelatorioCards() {
         relatorioLink.href = relatorioUrl;
         relatorioLink.textContent = '📊 Relatório de Atividade';
         relatorioLink.className = 'aalink ms-2';
-        relatorioLink.title = 'Relatório de atividade desta disciplina e bimestre';
+        relatorioLink.title = textoNormalizado || 'Relatório de atividade';
 
         courseLink.insertAdjacentElement('afterend', relatorioLink);
         courseLink.dataset.relatorioLinkAdded = 'true';
@@ -261,6 +285,81 @@ function formatarDisciplinaParaChave(texto) {
         .split(/\s+/)
         .filter(Boolean)
         .join("");
+}
+
+function limparNomeDisciplinaParaExibir(texto) {
+    if (!texto) return texto;
+    let t = texto;
+    // remove rótulos comuns que aparecem junto do título
+    t = t.replace(/(?:é favorito|Nome da disciplina)/gi, '');
+    // remove palavra literal 'Disciplina' no começo
+    t = t.replace(/^\s*Disciplina[:\s-]*/i, '');
+    // detecta e remove repetições consecutivas ou duplicações inteiras de frases
+    let words = t.split(/\s+/).filter(Boolean);
+    const normalize = arr => arr.join(' ').replace(/[\p{P}\p{S}]/gu, '').toLowerCase();
+    for (let k = Math.floor(words.length / 2); k >= 1; k--) {
+        // sequência consecutiva repetida no início: [A A ...]
+        if (words.length >= 2 * k) {
+            const firstK = words.slice(0, k);
+            const nextK = words.slice(k, k * 2);
+            if (normalize(firstK) === normalize(nextK)) {
+                words.splice(k, k); // remove a repetição consecutiva
+                t = words.join(' ');
+                break;
+            }
+        }
+
+        // frase inteira duplicada (metade == metade)
+        if (words.length === 2 * k) {
+            const firstK = words.slice(0, k);
+            const lastK = words.slice(k);
+            if (normalize(firstK) === normalize(lastK)) {
+                words = firstK.slice();
+                t = words.join(' ');
+                break;
+            }
+        }
+
+        // sobreposição: começo igual ao fim
+        const start = words.slice(0, k);
+        const end = words.slice(-k);
+        if (normalize(start) === normalize(end)) {
+            words.splice(-k, k);
+            t = words.join(' ');
+            break;
+        }
+    }
+    // remove indicação de bimestre tipo "- 1º Bimestre" ou "– 1BI"
+    t = t.replace(/\s*[-–—]\s*(?:\d+(?:º|°)?\s*(?:bimestre|bi)|[1-4](?:º|°)?\s*bimestre)/gi, '');
+    // remove repetições consecutivas de palavras idênticas
+    t = t.replace(/\b(\S+)(?:\s+\1\b)+/gi, '$1');
+    // colapsa espaços e trim
+    t = t.replace(/\s+/g, ' ').trim();
+    return t;
+}
+
+function gerarChaveDisciplina(texto) {
+    if (!texto) return 'SEM_DISCIPLINA';
+    // limpa e remove acentos
+    let cleaned = limparNomeDisciplinaParaExibir(texto || '');
+    cleaned = removerAcentos(cleaned || '').toUpperCase();
+    // remove bimestre, números e caracteres não alfanuméricos
+    cleaned = cleaned.replace(/\b(?:BI|BIMESTRE)\b/gi, '');
+    cleaned = cleaned.replace(/[0-9º°ªª]/g, '');
+    cleaned = cleaned.replace(/[^A-Z0-9\s]/g, ' ');
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    // use primeiras 6 palavras como chave para agrupar variações semelhantes
+    const words = cleaned.split(' ').filter(Boolean);
+    const key = words.slice(0, 6).join(' ');
+    return key || 'SEM_DISCIPLINA';
+}
+
+function extrairBimestre(texto) {
+    if (!texto) return 'Sem Bimestre';
+    const t = (texto || '').toString();
+    const m = t.match(/(?:\b|[^\d])(1|2|3|4)(?:º|°|\s)?\s*(?:bimestre|bi)\b/i);
+    if (m) return `${m[1]}BI`;
+    return 'Sem Bimestre';
 }
 
 function formatarBimestreParaArquivo(texto) {
@@ -513,8 +612,16 @@ function obterLinksRelatoriosCurso() {
         const courseLink = card.querySelector('a.aalink.coursename');
         if (!courseLink) return;
 
-        const textoCard = courseLink.textContent || '';
-        if (/Árvore de Materiais|Minha Biblioteca/i.test(textoCard.trim())) return;
+        // extrai texto fonte preferencialmente de aria-label ou sr-only dentro do card para evitar repetições
+        const aria = courseLink.getAttribute('aria-label');
+        const sr = card.querySelector('.card-body .multiline .sr-only') || card.querySelector('.card-body .sr-only') || card.querySelector('.sr-only');
+        const span = courseLink.querySelector('span');
+        const sourceText = (aria && aria.trim()) || (sr && sr.textContent && sr.textContent.trim()) || (span && span.textContent && span.textContent.trim()) || ((courseLink.textContent || '').trim()) || '';
+
+        let nome = limparNomeDisciplinaParaExibir(sourceText);
+        let bimestre = extrairBimestre(sourceText);
+
+        if (/Árvore de Materiais|Minha Biblioteca/i.test(nome)) return;
 
         const href = courseLink.href || '';
         const match = href.match(/[?&]id=(\d+)/);
@@ -522,7 +629,7 @@ function obterLinksRelatoriosCurso() {
 
         const courseId = match[1];
         const relatorioUrl = `https://educacaoprofissional.educacao.sp.gov.br/report/progress/index.php?course=${courseId}`;
-        lista.push(relatorioUrl);
+        lista.push({ url: relatorioUrl, disciplina: nome, bimestre: bimestre });
     });
 
     return lista;
@@ -703,7 +810,7 @@ function criarBotaoExtrairRelatorios() {
 
     botao.style.position = "fixed";
     botao.style.right = "20px";
-    botao.style.bottom = "6rem";
+    botao.style.bottom = "8rem";
     botao.style.zIndex = "9999";
 
     botao.style.padding = "10px 14px";
@@ -938,53 +1045,278 @@ function abrirModalRegistros(lista, tituloModal = "Links dos Registros") {
         info.style.marginBottom = "10px";
         info.style.fontSize = "14px";
 
+        const nomeLimpo = limparNomeDisciplinaParaExibir(disciplina.nome);
+
         info.innerHTML =
-            "<strong>Disciplina:</strong> " + disciplina.nome +
+            "<strong>" + nomeLimpo + "</strong>" +
             "<br><strong>Link:</strong> " + disciplina.url;
 
         modal.appendChild(info);
     }
 
-    const textarea = document.createElement("textarea");
+    // Suporte para ambos formatos: lista de strings (antigo) ou lista de objetos {url, disciplina, bimestre}
+    const rawList = lista || [];
+    const flatMode = rawList.length > 0 && typeof rawList[0] === 'string';
+    const items = rawList.map(i => (typeof i === 'string') ? { url: i, disciplina: null, bimestre: null } : (i.bimestre === undefined ? { ...i, bimestre: null } : i));
 
-    const textoLinks = lista.join("\n");
+    // Se for lista de registros (flatMode), mostra o título da página (h1 dentro de #page-header)
+    if (flatMode) {
+        const pageHeaderText = document.querySelector('#page-header h1')?.textContent?.trim();
+        if (pageHeaderText) {
+            const pageInfo = document.createElement('div');
+            pageInfo.style.marginBottom = '8px';
+            pageInfo.style.fontSize = '14px';
+            pageInfo.innerHTML = '<strong>' + pageHeaderText + '</strong>';
+            modal.appendChild(pageInfo);
+        }
+    }
 
-    textarea.value = textoLinks;
+    const container = document.createElement('div');
+    container.style.maxHeight = '60vh';
+    container.style.overflowY = 'auto';
+    container.style.marginTop = '10px';
 
-    textarea.style.width = "100%";
-    textarea.style.height = "250px";
-    textarea.style.marginTop = "10px";
+    // Agrupa por disciplina (usando a disciplina fornecida ou uma chave padrão) e por bimestre.
+    const grupos = {};
+    items.forEach(item => {
+        const rawNome = item.disciplina ? item.disciplina.trim() : 'Sem disciplina';
+        const disciplinaNome = limparNomeDisciplinaParaExibir(rawNome) || 'Sem disciplina';
+        const chave = gerarChaveDisciplina(disciplinaNome) || disciplinaNome;
+        if (!grupos[chave]) grupos[chave] = { nome: disciplinaNome, itemsByBimestre: {} };
 
+        const bimestre = item.bimestre || extrairBimestre(item.disciplina || disciplinaNome) || 'Sem Bimestre';
+        if (!grupos[chave].itemsByBimestre[bimestre]) grupos[chave].itemsByBimestre[bimestre] = [];
+        grupos[chave].itemsByBimestre[bimestre].push(item);
+    });
 
-    const copiar = document.createElement("button");
-
-    copiar.textContent = "📋 Copiar tudo";
-
-    copiar.style.marginTop = "10px";
-    copiar.style.marginRight = "10px";
-    copiar.style.padding = "6px 10px";
-    copiar.style.cursor = "pointer";
-
-
-    copiar.addEventListener("click", async () => {
-
+    // Botão copiar tudo
+    const copiarTudo = document.createElement('button');
+    copiarTudo.textContent = '📋 Copiar tudo';
+    copiarTudo.style.marginTop = '10px';
+    copiarTudo.style.marginRight = '10px';
+    copiarTudo.style.padding = '6px 10px';
+    copiarTudo.style.cursor = 'pointer';
+    copiarTudo.style.minWidth = '140px';
+    copiarTudo.style.display = 'inline-block';
+    copiarTudo.style.textAlign = 'center';
+    copiarTudo.style.borderRadius = '6px';
+    copiarTudo.style.background = '#17a2b8';
+    copiarTudo.style.color = 'white';
+    copiarTudo.style.border = 'none';
+    copiarTudo.addEventListener('click', async () => {
+        const allUrls = items.map(it => it.url).join('\n');
         try {
-
-            await navigator.clipboard.writeText(textoLinks);
-
-            copiar.textContent = "✅ Copiado!";
-
+            await navigator.clipboard.writeText(allUrls);
+            copiarTudo.textContent = '✅ Copiado!';
+            setTimeout(() => copiarTudo.textContent = '📋 Copiar tudo', 1500);
         } catch {
+            // fallback: criar textarea temporário
+            const ta = document.createElement('textarea');
+            ta.value = allUrls;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+            copiarTudo.textContent = '✅ Copiado!';
+            setTimeout(() => copiarTudo.textContent = '📋 Copiar tudo', 1500);
+        }
+    });
 
-            textarea.select();
+    // Botões globais por bimestre, ao lado do copiar tudo (apenas para lista de relatórios)
+    let bimestreBtnsContainer = null;
+    if (!flatMode) {
+        const bimestreSet = new Set();
+        items.forEach(it => {
+            const bim = it.bimestre || null;
+            if (bim && bim !== 'Sem Bimestre') bimestreSet.add(bim);
+        });
+        const bimestresGlobais = Array.from(bimestreSet);
+        // ordena usando mesma lógica
+        bimestresGlobais.sort((a, b) => {
+            const order = { '1BI': 1, '2BI': 2, '3BI': 3, '4BI': 4 };
+            const oa = order[a] || 99;
+            const ob = order[b] || 99;
+            if (oa !== ob) return oa - ob;
+            return (a || '').localeCompare(b || '');
+        });
 
-            document.execCommand("copy");
+        bimestreBtnsContainer = document.createElement('div');
+        bimestreBtnsContainer.style.display = 'inline-block';
+        bimestreBtnsContainer.style.marginLeft = '8px';
 
-            copiar.textContent = "✅ Copiado!";
+        bimestresGlobais.forEach(bim => {
+            const btn = document.createElement('button');
+            btn.textContent = bim;
+            btn.title = `Copiar todos os links de todos os cursos do ${bim}`;
+            btn.style.marginLeft = '6px';
+            btn.style.padding = '6px 8px';
+            btn.style.cursor = 'pointer';
+            btn.style.borderRadius = '6px';
+            btn.style.background = '#ffc107';
+            btn.style.color = '#000';
+            btn.style.border = 'none';
+            btn.addEventListener('click', async () => {
+                const urls = items.filter(it => (it.bimestre || '') === bim).map(it => it.url).join('\n');
+                try {
+                    await navigator.clipboard.writeText(urls);
+                    const old = btn.textContent;
+                    btn.textContent = '✅';
+                    setTimeout(() => btn.textContent = old, 1200);
+                } catch {
+                    const ta = document.createElement('textarea');
+                    ta.value = urls;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    ta.remove();
+                    const old = btn.textContent;
+                    btn.textContent = '✅';
+                    setTimeout(() => btn.textContent = old, 1200);
+                }
+            });
+            bimestreBtnsContainer.appendChild(btn);
+        });
+    }
 
+    // Monta grupos e suas tabelas, agora subdivididos por bimestre
+    if (flatMode) {
+        // Lista simples de registros (apenas URLs) — tenta usar texto do link na página quando possível
+        const table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+        table.style.marginTop = '6px';
+
+        items.forEach(item => {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.style.padding = '6px 4px';
+            td.style.borderBottom = '1px solid #eee';
+
+            const a = document.createElement('a');
+            a.href = item.url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+
+            // procura no DOM um anchor correspondente para obter texto legível
+            let label = null;
+            try {
+                const found = Array.from(document.querySelectorAll('a')).find(el => el.href === item.url || el.getAttribute('href') === item.url);
+                if (found) label = found.textContent.trim();
+            } catch (e) {
+                label = null;
+            }
+
+            a.textContent = (label && label.length) ? label : item.url;
+
+            td.appendChild(a);
+            tr.appendChild(td);
+            table.appendChild(tr);
+        });
+
+        container.appendChild(table);
+    } else {
+        Object.keys(grupos).forEach((chave, index) => {
+        const grupo = grupos[chave];
+
+        const grupoDiv = document.createElement('div');
+        grupoDiv.style.marginBottom = '12px';
+        grupoDiv.style.paddingTop = '8px';
+        // separador visual entre disciplinas
+        if (index > 0) {
+            grupoDiv.style.borderTop = '2px solid #d0d0d0';
+            grupoDiv.style.marginTop = '8px';
+            grupoDiv.style.paddingTop = '10px';
         }
 
+        const header = document.createElement('div');
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.alignItems = 'center';
+
+        const tituloGrupo = document.createElement('strong');
+        tituloGrupo.textContent = grupo.nome;
+
+        const copiarGrupoBtn = document.createElement('button');
+        copiarGrupoBtn.textContent = '📋 Copiar';
+        copiarGrupoBtn.title = 'Copiar todos os links da disciplina: ' + grupo.nome;
+        copiarGrupoBtn.style.padding = '6px 8px';
+        copiarGrupoBtn.style.cursor = 'pointer';
+        copiarGrupoBtn.style.minWidth = '140px';
+        copiarGrupoBtn.style.display = 'inline-block';
+        copiarGrupoBtn.style.boxSizing = 'border-box';
+        copiarGrupoBtn.style.textAlign = 'center';
+        copiarGrupoBtn.style.borderRadius = '6px';
+        copiarGrupoBtn.style.background = '#2c7be5';
+        copiarGrupoBtn.style.color = 'white';
+        copiarGrupoBtn.style.border = 'none';
+        copiarGrupoBtn.addEventListener('click', async () => {
+            const all = [];
+            Object.values(grupo.itemsByBimestre).forEach(arr => arr.forEach(it => all.push(it.url)));
+            const urls = all.join('\n');
+            try {
+                await navigator.clipboard.writeText(urls);
+                copiarGrupoBtn.textContent = '✅ Copiado!';
+                setTimeout(() => copiarGrupoBtn.textContent = '📋 Copiar', 1500);
+            } catch {
+                const ta = document.createElement('textarea');
+                ta.value = urls;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+                copiarGrupoBtn.textContent = '✅ Copiado!';
+                setTimeout(() => copiarGrupoBtn.textContent = '📋 Copiar', 1500);
+            }
+        });
+
+        header.appendChild(tituloGrupo);
+        header.appendChild(copiarGrupoBtn);
+        grupoDiv.appendChild(header);
+
+        // ordena bimestres: 1BI..4BI primeiro, depois 'Sem Bimestre'
+        const bimestres = Object.keys(grupo.itemsByBimestre || {});
+        bimestres.sort((a, b) => {
+            const order = { '1BI': 1, '2BI': 2, '3BI': 3, '4BI': 4 };
+            const oa = order[a] || 99;
+            const ob = order[b] || 99;
+            if (oa !== ob) return oa - ob;
+            return a.localeCompare(b);
+        });
+
+        bimestres.forEach(bim => {
+            const itemsB = grupo.itemsByBimestre[bim] || [];
+
+            // Não exibimos sub-header por bimestre dentro de cada disciplina (removido texto e botão verde)
+            const table = document.createElement('table');
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+            table.style.marginTop = '6px';
+
+            itemsB.forEach(item => {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.style.padding = '6px 4px';
+                td.style.borderBottom = '1px solid #eee';
+
+                const a = document.createElement('a');
+                a.href = item.url;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                const initialName = limparNomeDisciplinaParaExibir(item.disciplina || grupo.nome);
+                const bimestreLabel = (item.bimestre && item.bimestre !== 'Sem Bimestre') ? item.bimestre : (bim && bim !== 'Sem Bimestre' ? bim : null);
+                a.textContent = (initialName ? initialName + ' - ' : '') + (bimestreLabel ? bimestreLabel + ' - ' : '') + 'Relatório';
+
+                td.appendChild(a);
+                tr.appendChild(td);
+                table.appendChild(tr);
+            });
+
+            grupoDiv.appendChild(table);
+        });
+
+        container.appendChild(grupoDiv);
     });
+    }
 
 
 
@@ -1003,8 +1335,9 @@ function abrirModalRegistros(lista, tituloModal = "Links dos Registros") {
 
 
     modal.appendChild(titulo);
-    modal.appendChild(textarea);
-    modal.appendChild(copiar);
+    modal.appendChild(copiarTudo);
+    if (bimestreBtnsContainer) modal.appendChild(bimestreBtnsContainer);
+    modal.appendChild(container);
     modal.appendChild(fechar);
 
     overlay.appendChild(modal);
