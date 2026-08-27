@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Educação Profissional – Melhorias de Navegação
 // @namespace    https://educacaoprofissional.educacao.sp.gov.br/userscripts
-// @version      2.0
+// @version      2.1
 // @description  Userscript para melhorar a navegação no Moodle da Educação Profissional. Destaca registros de aula, fixa o breadcrumb com transparência, corrige breadcrumbs de relatórios, adiciona um botão flutuante que coleta e permite copiar todos os links de registros da disciplina atual e cria um botão de atalho fixo para exportar relatórios de conclusões de atividades em CSV.
 // @author       Hilgo
 // @match        https://educacaoprofissional.educacao.sp.gov.br/*
@@ -1039,20 +1039,13 @@ function abrirModalRegistros(lista, tituloModal = "Links dos Registros") {
     titulo.textContent = tituloModal;
 
     if (disciplina) {
-
-        const info = document.createElement("div");
-
-        info.style.marginBottom = "10px";
-        info.style.fontSize = "14px";
-
         const nomeLimpo = limparNomeDisciplinaParaExibir(disciplina.nome);
-
-        info.innerHTML =
-            "<strong>" + nomeLimpo + "</strong>" +
-            "<br><strong>Link:</strong> " + disciplina.url;
-
-        modal.appendChild(info);
+        const bimestrePagina = obterBimestreDaPagina();
+        // inclui nome da disciplina e bimestre (se houver) no título
+        titulo.textContent = tituloModal + ' — ' + nomeLimpo + (bimestrePagina ? (' - ' + bimestrePagina) : '');
     }
+    // adiciona o título ao modal imediatamente para garantir ordem correta
+    modal.appendChild(titulo);
 
     // Suporte para ambos formatos: lista de strings (antigo) ou lista de objetos {url, disciplina, bimestre}
     const rawList = lista || [];
@@ -1322,23 +1315,49 @@ function abrirModalRegistros(lista, tituloModal = "Links dos Registros") {
 
 
     const fechar = document.createElement("button");
-
     fechar.textContent = "Fechar";
-
     fechar.style.padding = "6px 10px";
     fechar.style.cursor = "pointer";
+    fechar.style.border = 'none';
+    fechar.style.borderRadius = '6px';
+    fechar.style.background = '#6c757d';
+    fechar.style.color = 'white';
+    fechar.style.boxShadow = '0 2px 6px rgba(0,0,0,0.12)';
+    // margem superior solicitada
+    fechar.style.marginTop = '10px';
 
 
-    fechar.addEventListener("click", () => {
-        overlay.remove();
-    });
-
-
-    modal.appendChild(titulo);
-    modal.appendChild(copiarTudo);
-    if (bimestreBtnsContainer) modal.appendChild(bimestreBtnsContainer);
+    // conteúdo principal
     modal.appendChild(container);
-    modal.appendChild(fechar);
+
+    // Footer: à esquerda ficam os botões de cópia, à direita o botão Fechar
+    const footerActions = document.createElement('div');
+    footerActions.style.display = 'flex';
+    footerActions.style.justifyContent = 'space-between';
+    footerActions.style.alignItems = 'center';
+    footerActions.style.marginTop = '10px';
+
+    const leftActions = document.createElement('div');
+    leftActions.style.display = 'flex';
+    leftActions.style.alignItems = 'center';
+    leftActions.style.gap = '8px';
+
+    // Ajusta margens dos botões para ficarem alinhados no footer
+    copiarTudo.style.marginTop = '0';
+    copiarTudo.style.marginRight = '6px';
+
+    leftActions.appendChild(copiarTudo);
+    if (bimestreBtnsContainer) leftActions.appendChild(bimestreBtnsContainer);
+
+    const rightActions = document.createElement('div');
+    rightActions.style.display = 'flex';
+    rightActions.style.justifyContent = 'flex-end';
+    rightActions.appendChild(fechar);
+
+    footerActions.appendChild(leftActions);
+    footerActions.appendChild(rightActions);
+
+    modal.appendChild(footerActions);
 
     overlay.appendChild(modal);
 
@@ -1356,6 +1375,9 @@ function abrirModalRegistros(lista, tituloModal = "Links dos Registros") {
     };
 
     document.addEventListener('keydown', handleEsc);
+
+    // Garante que o botão Fechar execute a mesma rotina de limpeza do modal
+    fechar.addEventListener('click', fecharModal);
 }
 
 
