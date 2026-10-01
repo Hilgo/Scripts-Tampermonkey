@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sala do Futuro - Lançamento automático de avaliação na sala do futuro por tabela
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  Automação de lançamento de notas de estudantes por planilha. Cole a lista de alunos com as respectivas notas para que o script atualize a tabela das notas da sala do futuro automaticamente. VERIFIQUE OS VALORES
 // @author       Lucas Palma Stabile - github.com/Hilgo
 // @icon         https://saladofuturoprofessor.educacao.sp.gov.br/favicon.ico
@@ -104,32 +104,62 @@ function AplicarNotas(){
 
     console.log(`Iniciando processamento para ${linhas.length} estudantes...`);
 
-    // 3. Iterar sobre cada linha encontrada
-    linhas.forEach(linha => {
-        // A primeira coluna (index 0) deve conter o nome do estudante
+    lancarNotasComDelay(linhas);
+
+    closeModal();
+}
+
+
+async function lancarNotasComDelay(linhas) {
+    console.log("Iniciando o lançamento automatizado com pausas...");
+
+    for (const linha of linhas) {
         const celulaNome = linha.cells[0];
         const celulaNota = linha.cells[1];
+
         if (celulaNome) {
             const nomeEstudante = celulaNome.textContent.trim();
             if (nomeEstudante) {
                 console.log(`Buscando input para o estudante: ${nomeEstudante}`);
-                // 4. Chamar a função existente com o nome extraído
+
                 const inputNota = encontrarInputNotaEstudante(nomeEstudante);
                 if (inputNota) {
-                    inputNota.value = parseFloat(celulaNota.textContent.replace(",","."));
-                    const event = new Event('change', { bubbles: true });
-                    inputNota.dispatchEvent(event);
-                    inputNota.style.border = '2px solid green'; // Destaca o input encontrado
-                    console.log(`Input encontrado para ${nomeEstudante}`);
+                    // Converte a nota substituindo a vírgula por ponto
+                    const valorNota = parseFloat(celulaNota.textContent.replace(",", "."));
+
+                    // Preenche o campo
+                    preencherCampoComEventos(inputNota, valorNota);
+                    console.log(`Nota inserida para ${nomeEstudante}. Aguardando 2,5 segundos...`);
+
+                    // O script pausa por 2500 milissegundos antes de ir para o próximo aluno
+                    await aguardar(2500);
+
                 } else {
                     console.warn(`Input de nota NÃO encontrado para ${nomeEstudante}`);
                 }
             }
         }
-    });
+    }
 
-    console.log("Processamento concluído.");
-    closeModal();
+    console.log("Processo de lançamento finalizado!");
+}
+
+// função para incluir delay a uma outra função
+const aguardar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Função auxiliar fora do loop para simular a digitação humana completa
+function preencherCampoComEventos(inputElement, valor) {
+    inputElement.focus();
+    inputElement.value = valor;
+
+    // Dispara a sequência de eventos para o site reconhecer a alteração
+    inputElement.dispatchEvent(new Event('focus', { bubbles: true }));
+    inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+    inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+    inputElement.dispatchEvent(new Event('blur', { bubbles: true }));
+
+    inputElement.blur();
+    inputElement.style.border = '2px solid green'; // Destaca visualmente
 }
 
 // Função para criar e adicionar o modal ao DOM
