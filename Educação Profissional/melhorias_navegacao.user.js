@@ -240,10 +240,12 @@ function criarLinksRelatorioCards() {
         if (!match) return;
 
         const courseId = match[1];
-        const relatorioUrl = `https://educacaoprofissional.educacao.sp.gov.br/report/progress/index.php?course=${courseId}`;
+        // link do curso [id do curso] ordenação pelo primeiro nome
+        const relatorioUrl = `https://educacaoprofissional.educacao.sp.gov.br/report/progress/index.php?course=${courseId}&activityinclude=all&activityorder=orderincourse&activitysection=-1&sort=firstname`;
 
         const relatorioLink = document.createElement('a');
         relatorioLink.href = relatorioUrl;
+        relatorioLink.target = "_blank";
         relatorioLink.textContent = '📊 Relatório de Atividade';
         relatorioLink.className = 'aalink ms-2';
         relatorioLink.title = textoNormalizado || 'Relatório de atividade';
