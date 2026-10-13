@@ -118,7 +118,7 @@ Script para otimizar a tela de lançamento de fechamento no sistema "Sala do Fut
 ### Método 1 (Recomendado)
 
 1. Acesse o arquivo no GitHub
-2. Clique em **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Sala%20do%20Futuro/lan%C3%A7ar_notas_planilha.user.js)** para o script Sala do Futuro Ou clique em **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Educa%C3%A7%C3%A3o%20Profissional/melhorias_navegacao.user.js)** para o script da melhoria de navegação.
+2. Clique em **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Sala%20do%20Futuro/lan%C3%A7ar_notas_planilha.user.js)** para o script Sala do Futuro Ou clique em **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Educa%C3%A7%C3%A3o%20Profissional/melhorias_navegacao.user.js)** para o script da melhoria de navegação e **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Sala%20do%20Futuro/melhorias_fechamento.user.js)** para o script Sala do Futuro do lançamento de Fechamento.
 3. O Tampermonkey abrirá automaticamente
 4. Clique em **Instalar**
 
@@ -128,7 +128,7 @@ Script para otimizar a tela de lançamento de fechamento no sistema "Sala do Fut
 
 1. Abra o Tampermonkey
 2. Clique em **Criar novo script**
-3. Cole o conteúdo do arquivo `melhorias_navegacao.user.js` ou `lançar_notas_planilha.user.js`
+3. Cole o conteúdo do arquivo `melhorias_navegacao.user.js`,  `lançar_notas_planilha.user.js` ou `melhorias_fechamento.user.js`
 4. Salve
 
 ---
