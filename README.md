@@ -27,6 +27,7 @@ Scripts Tampermonkey/
 |---- melhorias_navegacao.user.js
 |-- Sala do Futuro/
 |---- lançar_notas_planilha.user.js
+|---- melhorias_fechamento.user.js
 ```
 ---
 
@@ -85,6 +86,30 @@ Script para automação de lançamento de notas de estudantes no sistema "Sala d
 3. Clique em "Aplicar Notas" para preencher os campos automaticamente.
 
 **Atenção**: Sempre valide os valores inseridos para evitar erros.
+
+---
+
+## 🎯 Script: Melhorias na Tela de Lançamento de Fechamento - Sala do Futuro
+
+Script para otimizar a tela de lançamento de fechamento no sistema "Sala do Futuro" da educação de São Paulo. Automatiza o arredondamento de notas e melhora a visualização das informações.
+
+### ✨ Funcionalidades
+
+- ➕ Adiciona um botão "Arredondar Notas" na página de lançamento de fechamento
+- 🔢 Arredonda automaticamente as notas dos estudantes:
+  - Valores com casas decimais ≥ 0.5 são arredondados para o próximo número inteiro
+  - Exemplo: 4.5 → 5.0, 4.4 → 4.0
+- 🖍️ Destaque visual nos campos alterados (borda verde)
+- 📄 Exibe o valor original da nota em um novo campo de texto abaixo do campo alterado
+- 🔍 **Validação visual**: os valores originais permanecem visíveis para conferência
+
+### 📋 Como Usar
+
+1. Na página de lançamento de fechamento (`https://saladofuturoprofessor.educacao.sp.gov.br/diario-classe__fechamento___lancamentoDetalhes`), clique no botão "Arredondar Notas".
+2. O script processará automaticamente os campos de nota, aplicando o arredondamento e destacando os campos alterados.
+3. Confira os valores originais exibidos abaixo de cada campo alterado.
+
+**Atenção**: Sempre valide os valores antes de salvar.
 
 ---
 
