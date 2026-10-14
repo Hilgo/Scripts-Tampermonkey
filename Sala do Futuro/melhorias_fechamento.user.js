@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sala do Futuro - Melhorias tela de lançamento de Fechamento 
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  Melhorias tela de lançamento de fechamento - Arredondar notas automaticamente e melhoria exibição disciplina
 // @author       Lucas Palma Stabile - github.com/Hilgo
 // @icon         https://saladofuturoprofessor.educacao.sp.gov.br/favicon.ico
@@ -78,12 +78,11 @@ function executarAjustes() {
 function arrendondarNotas() {
     // Seleciona todas as divs com a classe "card_aluno"
     const cardsAlunos = document.querySelectorAll('div.card_aluno');
-
+    var indice = 0
     // Itera por cada card de aluno
     cardsAlunos.forEach(card => {
         // Seleciona o segundo "grup_faltas" dentro do card
         const grupFaltas = card.querySelectorAll('div.grup_faltas')[1]; // O índice 1 é o segundo elemento
-
         if (grupFaltas) {
             // Seleciona a label e verifica se o texto é "Nota"
             const labelNota = grupFaltas.querySelector('label');
@@ -97,7 +96,7 @@ function arrendondarNotas() {
 
                         // Arredonda o valor de acordo com a regra
                         const valorArredondado = valorOriginal % 1 >= 0.5 ? Math.ceil(valorOriginal) : Math.floor(valorOriginal); // Arredonda para o próximo inteiro se >= 0.5
-                        inputNota.value = valorArredondado.toFixed(1); // Define o valor arredondado no input
+                        inputNota.value = valorArredondado.toFixed(0); // Define o valor arredondado no input
 
                         // Adiciona a borda verde para destacar o campo alterado
                         inputNota.style.border = '2px solid green';
@@ -106,14 +105,22 @@ function arrendondarNotas() {
 
                         // Cria um novo div para exibir o valor original
                         const divValorOriginal = document.createElement('div');
-                        divValorOriginal.className = 'grup_faltas'; // Define a classe do novo div
-                        divValorOriginal.style.marginTop = '10px'; // Adiciona um espaçamento para separação
 
-                        // Adiciona o texto com o valor original
-                        divValorOriginal.textContent = `Nota Original: ${valorOriginal.toFixed(2)}`;
-
-                        // Adiciona o novo div após o grup_faltas atual
-                        grupFaltas.parentNode.appendChild(divValorOriginal);
+                        if (!document.querySelector("#div-valor-original"+indice)){
+                            divValorOriginal.id="div-valor-original"+indice
+                            divValorOriginal.className = 'grup_faltas'; // Define a classe do novo div
+                            divValorOriginal.style.marginTop = '10px'; // Adiciona um espaçamento para separação
+    
+                            // Adiciona o texto com o valor original
+                            divValorOriginal.textContent = `Nota Original: ${valorOriginal.toFixed(2)}`;
+    
+                            // Adiciona o novo div após o grup_faltas atual
+                            grupFaltas.parentNode.appendChild(divValorOriginal);
+                        }
+                        else{
+                            document.querySelector("#div-valor-original"+indice).textContent = `Nota Original: ${valorOriginal.toFixed(2)}`;
+                        }
+                        indice++
                     }
                 }
             }
