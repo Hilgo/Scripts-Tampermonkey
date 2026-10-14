@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Sala do Futuro - Melhorias tela de lançamento de Fechamento 
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Melhorias tela de lançamento de fechamento - Arredondar notas automaticamente e melhoria exibição disciplina
 // @author       Lucas Palma Stabile - github.com/Hilgo
 // @icon         https://saladofuturoprofessor.educacao.sp.gov.br/favicon.ico
@@ -25,26 +25,35 @@ function executarAjustes() {
             const textoDisciplina = span.textContent.replace("Disciplina:", "").trim();
             console.log(textoDisciplina); // Exibe "Programação Mobile" no console
 
-            // Adiciona o texto da disciplina ao breadcrumb
+            // Adiciona o texto da disciplina ao breadcrumb e altera se já existir
             const breadcrumb = document.querySelector('ol.breadcrumb');
+            // Cria o elemento <strong> para o texto da disciplina
+            const strong = document.createElement('strong');
+            strong.id = "texto-disciplina-breadcrumb";
+
             if (breadcrumb) {
-                const li = document.createElement('li');
-                li.className = 'breadcrumb-item active'; // Define a classe do item
-                li.setAttribute('aria-current', 'page'); // Define o atributo de acessibilidade
-
-                // Cria o elemento <strong> para o texto da disciplina
-                const strong = document.createElement('strong');
-                strong.textContent = textoDisciplina;
-
-                // Adiciona o elemento <strong> ao <li>
-                li.appendChild(strong);
-
-                // Adiciona o item ao final do breadcrumb
-                breadcrumb.appendChild(li);
+                if(document.querySelector("#texto-disciplina-breadcrumb"))
+                {
+                    document.querySelector("#texto-disciplina-breadcrumb").textContent = textoDisciplina;
+                }
+                else{
+                    const li = document.createElement('li');
+                    li.className = 'breadcrumb-item active'; // Define a classe do item
+                    li.id = "nome-disciplina-breadcrumb";
+                    li.setAttribute('aria-current', 'page'); // Define o atributo de acessibilidade
+                    
+                    strong.textContent = textoDisciplina;
+    
+                    // Adiciona o elemento <strong> ao <li>
+                    li.appendChild(strong);
+    
+                    // Adiciona o item ao final do breadcrumb
+                    breadcrumb.appendChild(li);
+                }
             }
         }
     });
-    var opcoesHeader = document.querySelector(".opcoes-header");
+    var opcoesHeader = document.querySelector(".position-sticky");
 
     if (!document.querySelector("#btn-arrendondar")) {
         const botaoArredondar = document.createElement("button");
@@ -53,6 +62,11 @@ function executarAjustes() {
         botaoArredondar.title = "Ao clicar, os valores das notas dos alunos serão arrendondados (acima de 0,5 a nota é arrendondada para cima)";
         botaoArredondar.textContent = "Arredondar Notas";
         botaoArredondar.style = "padding: 5px; width: 50%;";
+        botaoArredondar.style.width = '20%';
+        botaoArredondar.style.position = 'fixed';
+        botaoArredondar.style.bottom = '20px';
+        botaoArredondar.style.left = '25%';
+        botaoArredondar.style.zIndex = '1000'; 
         botaoArredondar.onclick = () => {
             arrendondarNotas()
         };
