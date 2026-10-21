@@ -25,6 +25,7 @@ Scripts Tampermonkey/
 |-- README.md
 |-- Educação Profissional/
 |---- melhorias_navegacao.user.js
+|---- melhorias_arvore_materiais.user.js
 |-- Sala do Futuro/
 |---- lançar_notas_planilha.user.js
 |---- melhorias_fechamento.user.js
@@ -63,6 +64,33 @@ Regras aplicadas:
 - disciplina sem espaços, acentos ou caracteres especiais
 - sugestão de turma baseada na turma selecionada no grupo
 - bimestre no formato 1BI, 2BI, 3BI ou 4BI
+
+---
+
+## 🎯 Script: Melhorias na Árvore de Materiais - Educação Profissional
+
+Script para facilitar a seleção e o download de vários materiais exibidos na Árvore de Materiais da Educação Profissional.
+
+### ✨ Funcionalidades
+
+- 📥 Adiciona o botão **“Baixar vários arquivos”** na página de materiais
+- ☑️ Permite selecionar os materiais individualmente ou por formato: PDF, PPTX e Outros
+- 🗂️ Baixa os arquivos selecionados em formato ZIP
+- 🏷️ Exibe e nomeia cada ZIP com o componente curricular, bimestre, semana, conteúdo e formato
+
+Exemplo de nome:
+
+- `Programação Mobile - 4º Bimestre - Semana 28 - Melhoria Contínua e Suporte - PDF.zip`
+
+### 📋 Como Usar
+
+1. Acesse a Árvore de Materiais da disciplina na página da Educação Profissional.
+2. Clique em **“Baixar vários arquivos”**.
+3. Selecione os materiais ou formatos desejados e clique em **“Baixar selecionados”**.
+
+O script lista os materiais que estão carregados na página no momento. Role a página para carregar mais materiais antes de abrir a lista, se necessário.
+
+**Observação sobre downloads:** conforme a configuração do navegador, o arquivo pode ser salvo automaticamente ou o navegador pode abrir uma janela para escolher o local. Se o nome sugerido pelo script for substituído por um nome aleatório, verifique no Tampermonkey a opção **Downloads (BETA) → Download Mode → Native** e possíveis extensões de gerenciamento de downloads do seu navegador.
 
 ---
 
@@ -118,7 +146,7 @@ Script para otimizar a tela de lançamento de fechamento no sistema "Sala do Fut
 ### Método 1 (Recomendado)
 
 1. Acesse o arquivo no GitHub
-2. Clique em **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Sala%20do%20Futuro/lan%C3%A7ar_notas_planilha.user.js)** para o script Sala do Futuro Ou clique em **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Educa%C3%A7%C3%A3o%20Profissional/melhorias_navegacao.user.js)** para o script da melhoria de navegação e **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Sala%20do%20Futuro/melhorias_fechamento.user.js)** para o script Sala do Futuro do lançamento de Fechamento.
+2. Clique em **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Sala%20do%20Futuro/lan%C3%A7ar_notas_planilha.user.js)** para o script Sala do Futuro, **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Educa%C3%A7%C3%A3o%20Profissional/melhorias_navegacao.user.js)** para melhorias de navegação, **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Educa%C3%A7%C3%A3o%20Profissional/melhorias_arvore_materiais.user.js)** para a Árvore de Materiais ou **[Raw](https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Sala%20do%20Futuro/melhorias_fechamento.user.js)** para melhorias no lançamento de fechamento.
 3. O Tampermonkey abrirá automaticamente
 4. Clique em **Instalar**
 
@@ -128,7 +156,7 @@ Script para otimizar a tela de lançamento de fechamento no sistema "Sala do Fut
 
 1. Abra o Tampermonkey
 2. Clique em **Criar novo script**
-3. Cole o conteúdo do arquivo `melhorias_navegacao.user.js`,  `lançar_notas_planilha.user.js` ou `melhorias_fechamento.user.js`
+3. Cole o conteúdo do arquivo `melhorias_navegacao.user.js`, `melhorias_arvore_materiais.user.js`, `lançar_notas_planilha.user.js` ou `melhorias_fechamento.user.js`
 4. Salve
 
 ---
@@ -145,6 +173,7 @@ Se configurado com `@updateURL` e `@downloadURL`, o script poderá ser atualizad
 - Podem sofrer alterações conforme mudanças nos ambientes
 - Compatíveis com os portais:
   - https://educacaoprofissional.educacao.sp.gov.br/
+  - https://epp-aulas.educacao.sp.gov.br/
   - https://saladofuturoprofessor.educacao.sp.gov.br/
 
 ---
