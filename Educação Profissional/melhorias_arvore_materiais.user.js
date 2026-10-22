@@ -1,19 +1,15 @@
 // ==UserScript==
 // @name         Educação Profissional – Melhorias na árvore de materiais
 // @namespace    https://educacaoprofissional.educacao.sp.gov.br/userscripts
-// @version      1.0
+// @version      1.1
 // @description  Lista, ao clicar no botão, os materiais atualmente exibidos e permite baixar PDF, PPT ou outros arquivos.
 // @author       Hilgo
-// @match        https://epp-aulas.educacao.sp.gov.br/administracao/*'
-// @match        https://epp-aulas.educacao.sp.gov.br/desenvolvimento-de-sistemas/*
-// @match        https://epp-aulas.educacao.sp.gov.br/ciencia-de-dados/*
-// @match        https://epp-aulas.educacao.sp.gov.br/logistica/*
-// @match        https://epp-aulas.educacao.sp.gov.br/enfermagem/*
+// @match        https://epp-aulas.educacao.sp.gov.br/*
 // @icon         https://educacaoprofissional.educacao.sp.gov.br/pluginfile.php/1/theme_boost_union/favicon/64x64/1774361098/favicon.ico
-// @require http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js
-// @require  https://gist.github.com/raw/2625891/waitForKeyElements.js
-// @updateURL   https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Educa%C3%A7%C3%A3o%20Profissional/melhorias_arvore_materiais.user.js
-// @downloadURL https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Educa%C3%A7%C3%A3o%20Profissional/melhorias_arvore_materiais.user.js
+// @require      http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js
+// @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
+// @updateURL    https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Educa%C3%A7%C3%A3o%20Profissional/melhorias_arvore_materiais.user.js
+// @downloadURL  https://github.com/Hilgo/Scripts-Tampermonkey/raw/refs/heads/main/Educa%C3%A7%C3%A3o%20Profissional/melhorias_arvore_materiais.user.js
 // @grant        GM_download
 // @connect      epp-aulas.educacao.sp.gov.br
 // ==/UserScript==
