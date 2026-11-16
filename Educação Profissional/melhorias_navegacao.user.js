@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Educação Profissional – Melhorias de Navegação
 // @namespace    https://educacaoprofissional.educacao.sp.gov.br/userscripts
-// @version      2.1
+// @version      2.2
 // @description  Userscript para melhorar a navegação no Moodle da Educação Profissional. Destaca registros de aula, fixa o breadcrumb com transparência, corrige breadcrumbs de relatórios, adiciona um botão flutuante que coleta e permite copiar todos os links de registros da disciplina atual e cria um botão de atalho fixo para exportar relatórios de conclusões de atividades em CSV.
 // @author       Hilgo
 // @match        https://educacaoprofissional.educacao.sp.gov.br/*
@@ -630,7 +630,7 @@ function obterLinksRelatoriosCurso() {
         if (!match) return;
 
         const courseId = match[1];
-        const relatorioUrl = `https://educacaoprofissional.educacao.sp.gov.br/report/progress/index.php?course=${courseId}`;
+        const relatorioUrl = `https://educacaoprofissional.educacao.sp.gov.br/report/progress/index.php?course=${courseId}&activityinclude=all&activityorder=orderincourse&activitysection=-1&sort=firstname`;
         lista.push({ url: relatorioUrl, disciplina: nome, bimestre: bimestre });
     });
 
@@ -870,8 +870,7 @@ function criarBotaoRelatorioConclusao() {
     // Se não tem courseId, não cria o botão
     if (!courseId) return;
 
-    const linkRelatorio = "https://educacaoprofissional.educacao.sp.gov.br/report/progress/index.php?course=" + courseId;
-
+    const linkRelatorio = `https://educacaoprofissional.educacao.sp.gov.br/report/progress/index.php?course=${courseId}&activityinclude=all&activityorder=orderincourse&activitysection=-1&sort=firstname`
     const botao = document.createElement("a");
 
     botao.href = linkRelatorio;
