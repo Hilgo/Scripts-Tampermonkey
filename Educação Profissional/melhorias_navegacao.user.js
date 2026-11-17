@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Educação Profissional – Melhorias de Navegação
 // @namespace    https://educacaoprofissional.educacao.sp.gov.br/userscripts
-// @version      2.2
+// @version      2.3
 // @description  Userscript para melhorar a navegação no Moodle da Educação Profissional. Destaca registros de aula, fixa o breadcrumb com transparência, corrige breadcrumbs de relatórios, adiciona um botão flutuante que coleta e permite copiar todos os links de registros da disciplina atual e cria um botão de atalho fixo para exportar relatórios de conclusões de atividades em CSV.
 // @author       Hilgo
 // @match        https://educacaoprofissional.educacao.sp.gov.br/*
@@ -26,6 +26,7 @@
 
     let botaoLinksRegistros = null;
     let botaoLinksRelatorios = null;
+    let botaoLinksAvaliacoesSemana = null;
     let botaoRelatorioConclusao = null;
     let botaoExportarCSV = null;
     let botoesRelatorioOcultos = false;
@@ -799,6 +800,74 @@ function criarBotaoExtrairRegistros() {
 
 }
 
+function obterLinksAvaliacoesPorSemana() {
+    const tabela = document.querySelector('table.bft-report-table');
+    if (!tabela) return [];
+
+    const semanasEncontradas = new Set();
+    const links = [];
+
+    tabela.querySelectorAll('tbody tr').forEach(linha => {
+        const atividade = linha.querySelector('[data-label="Atividade"]');
+        const linkAvaliar = linha.querySelector('.bft-report-col-action a.bft-report-action-grade[href]');
+        if (!atividade || !linkAvaliar) return;
+
+        const textoAtividade = atividade.textContent.replace(/\s+/g, ' ').trim();
+        const correspondencia = textoAtividade.match(/Registro\s+da\s+Aula\s*\(([^)]+)\)/i);
+        if (!correspondencia) return;
+
+        const semana = correspondencia[1].trim().toUpperCase();
+        if (semanasEncontradas.has(semana)) return;
+
+        semanasEncontradas.add(semana);
+        links.push(linkAvaliar.href);
+    });
+
+    return links;
+}
+
+function criarBotaoLinksAvaliacoesPorSemana() {
+    if (botaoLinksAvaliacoesSemana || !window.location.pathname.endsWith('/blocks/feedback_tracker/pages/pending_report.php')) return;
+
+    const botao = document.createElement('button');
+    botao.textContent = '📋 Copiar links das avaliações por semana';
+    Object.assign(botao.style, {
+        position: 'fixed', right: '20px', bottom: '11rem', zIndex: '9999',
+        padding: '10px 14px', background: '#17a2b8', color: 'white',
+        border: 'none', borderRadius: '6px', cursor: 'pointer',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+    });
+    aplicarFadeEmBotao(botao);
+
+    botao.addEventListener('click', async () => {
+        const links = obterLinksAvaliacoesPorSemana();
+        if (!links.length) {
+            alert('Nenhum link de avaliação de Registro da Aula foi encontrado na tabela.');
+            return;
+        }
+
+        const texto = links.join('\n');
+        try {
+            await navigator.clipboard.writeText(texto);
+        } catch {
+            const textarea = document.createElement('textarea');
+            textarea.value = texto;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            textarea.remove();
+        }
+
+        const textoOriginal = '📋 Copiar avaliações por semana';
+        botao.textContent = `✅ ${links.length} link(s) copiado(s)`;
+        setTimeout(() => { botao.textContent = textoOriginal; }, 1800);
+    });
+
+    botaoLinksAvaliacoesSemana = botao;
+    document.body.appendChild(botao);
+    if (botoesRelatorioOcultos) botao.style.display = 'none';
+}
+
 function criarBotaoExtrairRelatorios() {
     if (!window.location.pathname.endsWith('/my/courses.php')) return;
     if (botaoLinksRelatorios) return;
@@ -991,6 +1060,7 @@ function alternarVisibilidadeBotoesRelatorio(forcarOcultar) {
     const action = botoesRelatorioOcultos ? 'none' : 'block';
 
     if (botaoLinksRegistros) botaoLinksRegistros.style.display = action;
+    if (botaoLinksAvaliacoesSemana) botaoLinksAvaliacoesSemana.style.display = action;
     if (botaoRelatorioConclusao) botaoRelatorioConclusao.style.display = action;
     if (botaoExportarCSV) botaoExportarCSV.style.display = action;
 
@@ -1416,4 +1486,5 @@ function abrirModalRegistros(lista, tituloModal = "Links dos Registros") {
     
     waitForKeyElements('#course-index', executarAjustes);
     waitForKeyElements('.card.course-card', criarLinksRelatorioCards);
+    waitForKeyElements('table.bft-report-table', criarBotaoLinksAvaliacoesPorSemana);
 })();
